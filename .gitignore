@@ -1,0 +1,11 @@
+# SDD session temp files
+.github/*.tmp.md
+
+# Generated context (user-specific — not committed to the framework repo)
+.github/spec-scout/context/index.md
+.github/spec-scout/context/checkpoint.md
+.github/spec-scout/context/modules/*.md
+
+# IDE
+.idea/
+
