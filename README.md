@@ -50,7 +50,13 @@ curl -fsSL https://raw.githubusercontent.com/specscout27/spec-scout/main/install
 Or clone and run locally (recommended if you want to inspect the script first):
 
 ```bash
+# 1. Clone spec-scout somewhere outside your repo
 git clone https://github.com/specscout27/spec-scout.git /tmp/spec-scout
+
+# 2. cd into YOUR repo root first
+cd /path/to/your-repo
+
+# 3. Run the installer — it installs into whichever repo you're currently in
 bash /tmp/spec-scout/install.sh
 ```
 

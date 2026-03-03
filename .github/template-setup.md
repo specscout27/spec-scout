@@ -60,11 +60,12 @@ ai-coding
 
 **How it works:**
 ```bash
-# Option 1: curl direct
+# Option 1: curl direct (run from your repo root)
 curl -fsSL https://raw.githubusercontent.com/specscout27/spec-scout/main/install.sh | bash
 
 # Option 2: clone and run (inspect first)
 git clone https://github.com/specscout27/spec-scout.git /tmp/spec-scout
+cd /path/to/your-repo          # ← must be in YOUR repo root before calling the script
 bash /tmp/spec-scout/install.sh
 
 # Option 3: overwrite existing files

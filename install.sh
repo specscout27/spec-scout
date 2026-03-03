@@ -6,12 +6,22 @@
 # Copies the Spec-Scout SDD framework files into your repository so you can
 # start using GitHub Copilot Chat with the full governed workflow immediately.
 #
-# Usage:
-#   bash install.sh           # Install, skip files that already exist
-#   bash install.sh --force   # Install, overwrite any existing framework files
+# Usage (local clone — recommended):
+#   git clone https://github.com/specscout27/spec-scout.git /tmp/spec-scout
+#   cd /path/to/your-repo
+#   bash /tmp/spec-scout/install.sh           # skip files that already exist
+#   bash /tmp/spec-scout/install.sh --force   # overwrite existing files
+#
+# Usage (curl pipe):
+#   curl -fsSL https://raw.githubusercontent.com/specscout27/spec-scout/main/install.sh | bash
 # =============================================================================
 
 set -euo pipefail
+
+SPEC_SCOUT_REPO="https://github.com/specscout27/spec-scout.git"
+FRAMEWORK_VERSION="v3.0.0"
+CLEANUP_TMP=false
+TMP_CLONE_DIR=""
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 FORCE=false
@@ -19,21 +29,31 @@ for arg in "$@"; do
   [[ "$arg" == "--force" ]] && FORCE=true
 done
 
-# ── Resolve paths ─────────────────────────────────────────────────────────────
-# SCRIPT_DIR = directory this script lives in (the spec-scout repo root)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# ── Resolve SPEC_SCOUT_ROOT ───────────────────────────────────────────────────
+# When run as `bash /path/to/install.sh`, BASH_SOURCE[0] is the script file.
+# When piped via `curl | bash`, BASH_SOURCE[0] is empty or "/dev/stdin" —
+# in that case we clone the repo to a temp directory and use that as the source.
 
-# TARGET_ROOT = root of the repo the user wants to install INTO
-# If the user is running the script from inside the spec-scout clone, we default
-# to that same directory. If they pipe via curl, we use the current directory.
-if git -C "$SCRIPT_DIR" rev-parse --show-toplevel &>/dev/null; then
-  SPEC_SCOUT_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+
+if [[ -n "$SCRIPT_PATH" && "$SCRIPT_PATH" != "/dev/stdin" && -f "$SCRIPT_PATH" ]]; then
+  # Local invocation: source is the directory the script lives in
+  SPEC_SCOUT_ROOT="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 else
-  SPEC_SCOUT_ROOT="$SCRIPT_DIR"
+  # curl-pipe invocation: clone spec-scout to a temp dir
+  echo ""
+  echo "  📥  Detected curl-pipe install. Cloning Spec-Scout source..."
+  TMP_CLONE_DIR="$(mktemp -d)"
+  CLEANUP_TMP=true
+  git clone --depth 1 --quiet "$SPEC_SCOUT_REPO" "$TMP_CLONE_DIR"
+  SPEC_SCOUT_ROOT="$TMP_CLONE_DIR"
+  echo "  ✅  Cloned to: $TMP_CLONE_DIR"
 fi
 
-# The target repo is where the user is RIGHT NOW (their repo, not spec-scout's)
-TARGET_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# ── Resolve TARGET_ROOT ───────────────────────────────────────────────────────
+# Always the git root of wherever the USER is calling from (their repo).
+# We resolve from $PWD, NOT from $SPEC_SCOUT_ROOT, so the two are always distinct.
+TARGET_ROOT="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 
 TARGET_GITHUB="$TARGET_ROOT/.github"
 TARGET_SDD="$TARGET_GITHUB/spec-scout"
@@ -41,7 +61,7 @@ TARGET_SDD="$TARGET_GITHUB/spec-scout"
 # ── Banner ────────────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  🏗️  Spec-Scout Installer   Framework v3.0.0"
+echo "  🏗️  Spec-Scout Installer   Framework $FRAMEWORK_VERSION"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Source : $SPEC_SCOUT_ROOT"
 echo "  Target : $TARGET_ROOT"
@@ -49,11 +69,18 @@ echo "  Target : $TARGET_ROOT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# ── Guard: refuse to overwrite this repo's own files without --force ──────────
+# ── Guard: same-repo warning (only valid during spec-scout development) ───────
 if [[ "$TARGET_ROOT" == "$SPEC_SCOUT_ROOT" ]]; then
   echo "⚠️  Warning: Target repo is the same as the Spec-Scout source repo."
   echo "   This is only valid during development. Proceeding anyway."
   echo ""
+fi
+
+# ── Guard: target must be a real directory ────────────────────────────────────
+if [[ ! -d "$TARGET_ROOT" ]]; then
+  echo "❌  Cannot determine target repository root."
+  echo "   Run this script from inside a git repository."
+  exit 1
 fi
 
 # ── Helper: copy a single file ────────────────────────────────────────────────
@@ -155,3 +182,7 @@ echo "📖  Full documentation: .github/spec-scout/README.md"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+# ── Cleanup temp clone (curl-pipe installs only) ──────────────────────────────
+if [[ "$CLEANUP_TMP" == true && -n "$TMP_CLONE_DIR" && -d "$TMP_CLONE_DIR" ]]; then
+  rm -rf "$TMP_CLONE_DIR"
+fi
