@@ -74,7 +74,10 @@ The installer copies all framework files to the correct `.github/` paths, create
 
 1. Make sure you are on the `main` branch with a clean working tree
 2. Open **GitHub Copilot Chat** in your IDE
-3. Paste the full contents of `.github/spec-scout/code-to-spec.md` as your first message
+3. Type the following prompt:
+
+   > `Please read the file .github/spec-scout/code-to-spec.md and follow all the instructions in it to generate the SDD context for this repository.`
+
 4. Follow the interactive prompts — Copilot will map your codebase into structured module context files
 5. Commit the generated files:
 
@@ -111,7 +114,7 @@ Every story follows the same governed sequence. Copilot **always waits for your 
 |------|---------|
 | `.github/copilot-instructions.md` | The agent brain — phases, commands, and governance rules |
 | `.github/spec-scout/CONSTITUTION.md` | Non-negotiable quality laws (PII/Secrets, 90% coverage, scope isolation) |
-| `.github/spec-scout/code-to-spec.md` | Paste once to generate all context from your codebase |
+| `.github/spec-scout/code-to-spec.md` | Instruction file read by Copilot once to generate all context from your codebase |
 | `.github/spec-scout/update-context.md` | Drives `@update-context` to keep context in sync with `main` |
 | `.github/spec-scout/session-tmp-file-protocol.md` | Session temp file format and `@continue` restore logic |
 | `.github/spec-scout/summary-template.md` | Per-story summary artefact generated at end of Phase 5 |

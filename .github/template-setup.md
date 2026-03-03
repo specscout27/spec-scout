@@ -41,7 +41,7 @@ ai-coding
 **How it works:**
 1. User clicks "Use this template" on the Spec-Scout GitHub page
 2. GitHub creates a new repository in the user's account, pre-populated with all framework files
-3. User clones their new repo, switches to `main`, opens Copilot Chat, and pastes `code-to-spec.md`
+3. User clones their new repo, switches to `main`, opens Copilot Chat, and types the context generation prompt (see below)
 
 **What the user gets immediately:**
 - `.github/copilot-instructions.md` ready to use
@@ -49,7 +49,10 @@ ai-coding
 - Empty `context/` scaffold ready for first-time context generation
 
 **What the user still needs to do:**
-- Run the `code-to-spec.md` interactive session to generate their module context files
+- Run the `code-to-spec` context generation session in Copilot Chat using this prompt:
+
+  > `Please read the file .github/spec-scout/code-to-spec.md and follow all the instructions in it to generate the SDD context for this repository.`
+
 - Commit and push the generated context
 
 ---
@@ -112,5 +115,7 @@ The following files are **user-generated** and are intentionally excluded from t
 | `.github/spec-scout/context/checkpoint.md` | Temporary state file during `code-to-spec` run |
 | `.github/*.tmp.md` | Session temp files — should never be committed |
 
-Users generate these by running the `code-to-spec.md` interactive session after install.
+Users generate these by running the context generation prompt in Copilot Chat after install:
+
+> `Please read the file .github/spec-scout/code-to-spec.md and follow all the instructions in it to generate the SDD context for this repository.`
 

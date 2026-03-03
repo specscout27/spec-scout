@@ -63,7 +63,7 @@ your-repo/
 |------|---------|
 | `copilot-instructions.md` | Defines the phases, commands, and rules the AI follows every session |
 | `CONSTITUTION.md` | The non-negotiable quality and safety rules (PII, coverage, scope) |
-| `code-to-spec.md` | Paste into Copilot Chat once to generate all context from your codebase |
+| `code-to-spec.md` | Instruction file read by Copilot once to generate all context from your codebase |
 | `update-context.md` | Drives the `@update-context` command to keep context in sync |
 | `context/index.md` | Module map, tech stack summary, and baseline commit — the AI always reads this first |
 | `context/modules/[name].md` | Per-module flows, entry points, and ownership — generated once, maintained over time |
@@ -116,7 +116,11 @@ git push origin main
 
 ## Generating Your Context (First Time)
 
-Open GitHub Copilot Chat and paste the contents of `.github/spec-scout/code-to-spec.md` as your message.
+Open GitHub Copilot Chat and type the following prompt:
+
+> `Please read the file .github/spec-scout/code-to-spec.md and follow all the instructions in it to generate the SDD context for this repository.`
+
+Copilot will read the instruction file directly from your workspace — no copy-pasting required.
 
 **What happens:**
 
