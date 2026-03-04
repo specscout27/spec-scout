@@ -72,20 +72,7 @@ your-repo/
 
 ## Initial Setup
 
-### 1. Copy the framework files
-
-Copy the following files into your repository at these **exact paths** (don't rename or move them — the AI resolves references using these paths):
-
-```
-.github/copilot-instructions.md
-.github/spec-scout/summary-template.md
-.github/spec-scout/CONSTITUTION.md
-.github/spec-scout/code-to-spec.md
-.github/spec-scout/update-context.md
-.github/spec-scout/session-tmp-file-protocol.md
-```
-
-### 2. Make sure you're on `main` with a clean working tree
+### 1. Make sure you're on `main` with a clean working tree
 
 The context generation process must run on `main` with no uncommitted local changes:
 
@@ -98,9 +85,9 @@ git status          # must show nothing — a clean tree
 If `git status` shows files, commit, stash, or discard them first.
 The AI will detect and explain any dirty-tree issues — but it will **never** stash or checkout for you.
 
-### 3. Generate your context (see next section)
+### 2. Generate your context (see next section)
 
-### 4. Commit the generated files yourself
+### 3. Commit the generated files yourself
 
 After the AI finishes generating context, you run:
 
@@ -115,6 +102,8 @@ git push origin main
 ---
 
 ## Generating Your Context (First Time)
+
+> 💡 **Note:** It is recommended to use the latest Claude model when running the code-to-spec process for best results.
 
 Open GitHub Copilot Chat and type the following prompt:
 
