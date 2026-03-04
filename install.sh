@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Spec-Scout Installer — Framework Version v3.0.0
+# Spec-Scout Installer — Framework Version v3.1.0
 # https://github.com/specscout27/spec-scout
 #
 # Copies the Spec-Scout SDD framework files into your repository so you can
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 SPEC_SCOUT_REPO="https://github.com/specscout27/spec-scout.git"
-FRAMEWORK_VERSION="v3.0.0"
+FRAMEWORK_VERSION="v3.1.0"
 CLEANUP_TMP=false
 TMP_CLONE_DIR=""
 
@@ -65,7 +65,7 @@ echo "  🏗️  Spec-Scout Installer   Framework $FRAMEWORK_VERSION"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Source : $SPEC_SCOUT_ROOT"
 echo "  Target : $TARGET_ROOT"
-[[ "$FORCE" == true ]] && echo "  Mode   : --force (existing files will be overwritten)"
+[[ "$FORCE" == true ]] && echo "  Mode   : --force (existing files will always be overwritten)" || echo "  Mode   : smart-update (copy if new or changed, skip if identical)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -83,7 +83,21 @@ if [[ ! -d "$TARGET_ROOT" ]]; then
   exit 1
 fi
 
+# ── Helper: compute a file checksum (shasum preferred, md5sum fallback) ───────
+_checksum() {
+  if command -v shasum &>/dev/null; then
+    shasum -a 256 "$1" | awk '{print $1}'
+  else
+    md5sum "$1" | awk '{print $1}'
+  fi
+}
+
 # ── Helper: copy a single file ────────────────────────────────────────────────
+# Behaviour:
+#   --force          → always overwrite
+#   dst missing      → copy   (new install)
+#   dst exists, src ≠ dst content → copy   (framework update)
+#   dst exists, src = dst content → skip   (already up-to-date)
 copy_file() {
   local src="$1"
   local dst="$2"
@@ -95,12 +109,17 @@ copy_file() {
 
   mkdir -p "$(dirname "$dst")"
 
-  if [[ -f "$dst" ]] && [[ "$FORCE" == false ]]; then
-    echo "  ⏭️  Skipped (already exists): ${dst#$TARGET_ROOT/}"
-    echo "      Run with --force to overwrite."
-  else
+  if [[ "$FORCE" == true ]]; then
     cp "$src" "$dst"
-    echo "  ✅  Copied : ${dst#$TARGET_ROOT/}"
+    echo "  ✅  Copied  : ${dst#$TARGET_ROOT/}"
+  elif [[ ! -f "$dst" ]]; then
+    cp "$src" "$dst"
+    echo "  ✅  Copied  : ${dst#$TARGET_ROOT/}"
+  elif [[ "$(_checksum "$src")" != "$(_checksum "$dst")" ]]; then
+    cp "$src" "$dst"
+    echo "  🔄  Updated : ${dst#$TARGET_ROOT/}"
+  else
+    echo "  ⏭️  Skipped  : ${dst#$TARGET_ROOT/}  (already up-to-date)"
   fi
 }
 
@@ -148,7 +167,7 @@ mkdir -p "$TARGET_SDD/context/modules"
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅  Spec-Scout v3.0.0 installed successfully!"
+echo "✅  Spec-Scout v3.1.0 installed successfully!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📋  Setup Checklist"
