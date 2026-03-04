@@ -1,4 +1,4 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.2.0 -->
 # 🤖 AI Agent Workflow Instructions: Refined for SDD Governance
 
 ### Escape Hatch: @noscout
@@ -59,6 +59,35 @@ You may use the following commands to execute only specific phases of the SDD wo
 - **Strict Wait:** You are forbidden from proceeding to a subsequent phase without explicit, written approval from the user.
 - **Context Refresh:** Whenever a discussion occurs or feedback is provided, you must immediately update your internal context and the proposed plan before asking for approval again.
 
+---
+
+## 🛑 Zero Tolerance Checkpoint Protocol (ABSTRACT — Referenced at Every Hard Stop)
+
+> **This protocol is defined ONCE here and applies in full wherever `[ZERO TOLERANCE CHECKPOINT]` appears in this document.**
+
+**When a `[ZERO TOLERANCE CHECKPOINT]` is invoked, the following rules apply WITHOUT EXCEPTION:**
+
+1. You are **FORBIDDEN** from proceeding past that point in the same response turn.
+2. You **MUST NOT** call any tools, read any files, or generate any analysis for the next phase while waiting.
+3. You **MUST NOT** "helpfully" preload context, solutions, tasks, or code speculatively.
+4. Any action taken before the user explicitly replies is a **CRITICAL PROTOCOL VIOLATION**.
+5. The correct behaviour is always: **present the required output for the current phase → END TURN immediately → wait → resume ONLY after the user provides the explicit unlock phrase for that checkpoint**.
+6. If the user provides feedback or requests changes instead of the unlock phrase, incorporate the changes, then END TURN again — do NOT auto-advance.
+
+**Unlock phrases per checkpoint:**
+
+| Checkpoint | Location | Unlock Phrase |
+|---|---|---|
+| P0 Gate | Phase 0A | `YES` or `NO` |
+| Phase 1 Gate | Phase 1E | `PROCEED` or `APPROVED` |
+| Phase 2 Gate | Phase 2B | Explicit approach selection, e.g. `SELECT 1` |
+| Phase 3 Gate | Phase 3 | `EXECUTE PLAN` |
+| Phase 4 Task Gate | Phase 4 (per task) | Explicit task confirmation |
+
+> **ENFORCEMENT:** This protocol is not advisory. It is a hard constraint with zero exceptions. Violation at any checkpoint is a critical failure of the agent's governance mandate.
+
+---
+
 **🚫 AGENT HARD CONSTRAINT — NO GIT WRITES EVER:**
 The agent must **NEVER** execute `git commit`, `git push`, `git stash`, `git checkout`, `git clean`, `git reset`, or any other command that writes to git history, modifies the working tree, or pushes to a remote — across ALL phases and commands in this workflow. The agent's role is **read, analyse, and write context/code files only**. All git state-modifying operations are the **user's exclusive responsibility**. Violation of this rule is a critical failure.
 
@@ -110,12 +139,7 @@ Output this question **verbatim**, then terminate your response:
 
 ---
 
-**🛑 ZERO TOLERANCE RULE — READ THIS BEFORE GENERATING ANY OUTPUT:**
-- You are **FORBIDDEN** from proceeding past this point in the same response turn.
-- You **MUST NOT** call any tools, read any files, or generate any analysis while waiting.
-- You **MUST NOT** "helpfully" preload context or begin Phase 1 speculatively.
-- Any action taken before the user replies with YES or NO is a **CRITICAL PROTOCOL VIOLATION**.
-- The correct behaviour is: **output the question → END TURN → wait → resume only after user replies**.
+> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES` or `NO`. END TURN.
 
 ---
 
@@ -231,7 +255,7 @@ The SDD context is stored in a structured directory under `.github/spec-scout/co
     7.  **Governance Audit:** Flag any governance issues found and state whether they are blocking (must be addressed now) or advisory (noted, no block). Always complete the audit step and report the result.
     8.  **Baseline Status:** List of current file errors, failed tests, and observed state.
     9.  **Clarifying Questions / Potential Pitfalls:** Any unanswered questions that could cause hallucination or incorrect implementation. **WAIT for user answers before proceeding if critical questions are raised.**
-* **PROMPT FORWARD:** **STRICT WAIT.** Update context based on any user feedback. Proceed to Phase 2 **ONLY** after the user says "PROCEED" or "APPROVED".
+* **PROMPT FORWARD:** > 🛑 **[ZERO TOLERANCE CHECKPOINT — Phase 1 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Update context based on any user feedback before proceeding. Unlock phrase: `PROCEED` or `APPROVED`. END TURN.
 
 ---
 
@@ -248,7 +272,7 @@ The SDD context is stored in a structured directory under `.github/spec-scout/co
 ### 2B. Presentation & Choice
 * **ACTION:** Present each approach with a Title, **Pros**, and **Cons**, along with **Potential Pitfalls/Questions**.
 * **CONTEXT IMPACT:** For each approach, indicate which module context files (and which specific flow sections within them) will need updates after implementation.
-* **PROMPT FORWARD:** **STRICT WAIT.** If the user suggests changes, update the proposed solutions first. Proceed to Phase 3 **ONLY** after the user explicitly selects an approach (e.g., "SELECT 1").
+* **PROMPT FORWARD:** > 🛑 **[ZERO TOLERANCE CHECKPOINT — Phase 2 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. If the user suggests changes, update the proposed solutions first, then END TURN and wait again. Unlock phrase: explicit approach selection, e.g. `SELECT 1`. END TURN.
 
 ---
 
@@ -276,7 +300,7 @@ The SDD context is stored in a structured directory under `.github/spec-scout/co
 -   **TESTING INTEGRATION:** Every task that touches code includes a **"Test Gate"** sub-step (see Phase 4 rule). Specify which unit and integration tests are expected.
 -   **CONSTRAINT:** The plan must explicitly state the target success metrics as defined in the **Global Governance**.
 -   **CLARIFICATION CHECK:** Before finalising the plan, if any task relies on undocumented behaviour or an empty module context file, ask the user targeted questions to fill that gap.
-- **PROMPT FORWARD:** **STRICT WAIT.** If the user modifies the task order or scope, update the entire plan. Proceed to Phase 4 **ONLY** after the user says "EXECUTE PLAN".
+- **PROMPT FORWARD:** > 🛑 **[ZERO TOLERANCE CHECKPOINT — Phase 3 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. If the user modifies the task order or scope, update the entire plan, then END TURN and wait again. Unlock phrase: `EXECUTE PLAN`. END TURN.
 
 ---
 
@@ -304,7 +328,7 @@ After implementing each task, you **MUST** execute the following before asking f
 
 > **RULE:** You are forbidden from presenting "CONFIRM EXECUTION FOR THIS TASK" as complete or asking to move to the next task if any impacted test is failing.
 
-- **PROMPT FORWARD:** **STRICT WAIT.** After each task and its Test Gate pass, present the changes and wait for approval. Proceed to the next task or Phase 5 **ONLY** after explicit user confirmation.
+- **PROMPT FORWARD:** > 🛑 **[ZERO TOLERANCE CHECKPOINT — Phase 4 Task Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: explicit task confirmation. END TURN.
 
 ---
 
