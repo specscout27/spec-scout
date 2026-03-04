@@ -35,15 +35,6 @@ You may use the following commands to execute only specific phases of the SDD wo
 
 ---
 
-### Step 0: Session-Resilient Temporary File Protocol
-
-**Follow the protocol described in `.github/spec-scout/session-tmp-file-protocol.md` before and after each phase.**
-
-**Note:**
-- The protocol file also details the @continue command for session restoration. See `.github/spec-scout/session-tmp-file-protocol.md` for requirements and error handling.
-
----
-
 ### 🔄 Context Update Command: @update-context
 
 **Purpose:** Analyse committed changes relative to main and update module context files to reflect what has drifted since the last baseline commit.
@@ -88,18 +79,67 @@ The agent must **NEVER** execute `git commit`, `git push`, `git stash`, `git che
 
 1. Check the session value of `needContextReload`.
 2. **If `needContextReload` is `true`:**
-   - Identify which module context files were updated during the last `@update-context` run (stored in the session summary from that run).
-   - **Reload ONLY those specific module files** from `.github/spec-scout/context/modules/[module_name].md` — do NOT reload unrelated modules.
-   - Retain all other context already loaded in the current session.
-   - Announce: `"♻️ Context reloaded for: [list of reloaded module files]. Continuing with updated context."`
-   - Set `needContextReload` to `false`.
+    - Identify which module context files were updated during the last `@update-context` run (stored in the session summary from that run).
+    - **Reload ONLY those specific module files** from `.github/spec-scout/context/modules/[module_name].md` — do NOT reload unrelated modules.
+    - Retain all other context already loaded in the current session.
+    - Announce: `"♻️ Context reloaded for: [list of reloaded module files]. Continuing with updated context."`
+    - Set `needContextReload` to `false`.
 3. **If `needContextReload` is `false`:** No action needed — retain existing loaded context and continue.
 
 > **RULE:** Do not re-read the entire context directory on every phase. Only reload the specific modules flagged during the last context update, and only once per flag cycle.
 
 ---
 
-## 📚 Context Loading Protocol (MANDATORY — applies to every phase)
+## Phase 0: Drift Analysis & Context Update (MANDATORY FIRST STEP)
+
+**Goal:** Ensure context is up-to-date with main before beginning analysis. This phase is offered to the user before Phase 1 on every new story/prompt.
+
+> ⚠️ **DISCLAIMER:** This phase operates under the assumption that **the current branch is already rebased / up-to-date with main**. If it is not, the diff output and context update will be inaccurate. A rebase confirmation is part of this flow.
+
+### 0A — Ask the User
+
+**AGENT HARD STOP — MANDATORY GATE. THIS IS A BLOCKING CHECKPOINT.**
+
+Your **ONLY permitted action** at this step is to output the question below and then **STOP ALL PROCESSING IMMEDIATELY**. You must not read any file, run any tool, load any context, or execute any logic after printing the question. The current turn **ENDS** after this question is displayed. No further output. No analysis. No "meanwhile" actions.
+
+Output this question **verbatim**, then terminate your response:
+
+> "**Would you like to run a context drift check (P0) before we begin?**
+> This will compare the module context to main and update any drifted specs.
+> _(Reply **YES** to run context update, or **NO** to skip and proceed directly to Phase 1.)_"
+
+---
+
+**🛑 ZERO TOLERANCE RULE — READ THIS BEFORE GENERATING ANY OUTPUT:**
+- You are **FORBIDDEN** from proceeding past this point in the same response turn.
+- You **MUST NOT** call any tools, read any files, or generate any analysis while waiting.
+- You **MUST NOT** "helpfully" preload context or begin Phase 1 speculatively.
+- Any action taken before the user replies with YES or NO is a **CRITICAL PROTOCOL VIOLATION**.
+- The correct behaviour is: **output the question → END TURN → wait → resume only after user replies**.
+
+---
+
+**Resume only after the user has explicitly replied YES or NO:**
+
+- **If user says NO (or skips):**
+    - Print the following high-level warning and immediately jump to Phase 1:
+      > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
+    - Set the `needContextReload` flag to `false` (no reload triggered).
+    - Do **not** revisit context update for the rest of this session.
+
+- **If user says YES:**
+    - Execute the full `@update-context` flow as documented in `.github/spec-scout/update-context.md`.
+    - After the update flow completes, `needContextReload` will be set to `true` by that flow.
+    - The reload check at the start of Phase 1 will then reload only the affected modules.
+    - Once reloaded, proceed into Phase 1 normally.
+
+---
+
+## Phase 1: Context Gathering & Deep Tech Analysis
+**Goal:** Establish a 100% comprehensive understanding of the existing technical implementation and the problem context before proposing solutions.
+
+
+### 1A —  Smart Context Loading
 
 The SDD context is stored in a structured directory under `.github/spec-scout/context/`:
 
@@ -110,8 +150,6 @@ The SDD context is stored in a structured directory under `.github/spec-scout/co
   modules/
     [module_name].md                ← Individual Module Flow Analysis
 ```
-
-### Step 0A: Smart Context Loading
 
 **This protocol MUST be executed at the start of Phase 1 (Step 1A), before any other analysis.**
 
@@ -145,83 +183,14 @@ The SDD context is stored in a structured directory under `.github/spec-scout/co
 
 > **MODULE OWNERSHIP:** Every module file MUST contain a `## Module Ownership` block. If a loaded module is missing this block, flag it immediately in Phase 1C. The block is generated by the `code-to-spec` process (see `.github/spec-scout/code-to-spec.md`). Do not proceed with boundary checks or conflict detection for that module until the block is present or the user supplies the values.
 
----
+### 1B: Session-Resilient Temporary File Protocol
 
-## 🟢 Execution Mode Detection
+**Follow the protocol described in `.github/spec-scout/session-tmp-file-protocol.md` before and after each phase.**
 
-**Applied automatically during Phase 1A, declared in Phase 1C, governs Phase 2 and Phase 3 behaviour.**
+**Note:**
+- The protocol file also details the @continue command for session restoration. See `.github/spec-scout/session-tmp-file-protocol.md` for requirements and error handling.
 
-> ⚠️ **Context Update Skipped Notice:** If the user chose **not** to run P0 (context update), the agent must print the following at the start of Phase 1:
-> `"⚠️ Context update was skipped at P0. The context may be drifted from main. All analysis and decisions in this session are based on the currently loaded context and repo code only. This notice applies for the remainder of this session."`
-> The agent then proceeds directly into Phase 1 without further prompting about context drift for the rest of the session.
-
-After loading all relevant modules, evaluate the story against the criteria below and declare one of two execution modes. **The user may override the detected mode.**
-
-### Mode: STRUCTURED (Low-Ceremony)
-
-**Auto-select when ALL of the following are true:**
-- Only **1 module** is loaded.
-- No schema / data model changes detected or expected.
-- No event publishing or consumption changes.
-- No new entry points (no new REST endpoints, listeners, or scheduled jobs).
-- Drift level is **D0 or D1** for the loaded module.
-- No conflict detected.
-
-**Behaviour in STRUCTURED mode:**
-- **Phase 2:** Skip presenting multiple solution alternatives. Proceed directly with the single best-fit approach. State: `"Mode: STRUCTURED — single approach applied."`.
-- **Phase 3:** Use the Auto-Task Generator (see Phase 3) with a simplified task set (domain + test + context only).
-- All governance, test gates, and quality checks still apply.
-
-### Mode: FULL GOVERNED (Full-Ceremony)
-
-**Auto-select when ANY of the following are true:**
-- **2 or more modules** loaded.
-- Any schema / data model change detected or expected.
-- Any event publishing or consumption change.
-- Any new entry point added.
-- Drift level is **D2 or D3** on any loaded module.
-- Any conflict detected.
-
-**Behaviour in FULL GOVERNED mode:**
-- All phases execute in full, including minimum two solution alternatives in Phase 2.
-- Auto-Task Generator produces the full per-module task set.
-
-> **Declaration format in Phase 1C:** `Execution Mode: STRUCTURED ✅` or `Execution Mode: FULL GOVERNED 🔵` — with the triggering criteria listed.
-
----
-
-## Phase P0: Drift Analysis & Context Update (Optional — ask user before executing)
-
-**Goal:** Ensure context is up-to-date with main before beginning analysis. This phase is offered to the user before Phase 1 on every new story/prompt.
-
-> ⚠️ **DISCLAIMER:** This phase operates under the assumption that **the current branch is already rebased / up-to-date with main**. If it is not, the diff output and context update will be inaccurate. A rebase confirmation is part of this flow.
-
-### P0.0 — Ask the User
-
-Before executing anything, ask:
-
-> "**Would you like to run a context drift check (P0) before we begin?**
-> This will compare the module context to main and update any drifted specs.
-> _(Reply **YES** to run context update, or **NO** to skip and proceed directly to Phase 1.)_"
-
-- **If user says NO (or skips):**
-  - Print the following high-level warning and immediately jump to Phase 1:
-    > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
-  - Set the `needContextReload` flag to `false` (no reload triggered).
-  - Do **not** revisit context update for the rest of this session.
-
-- **If user says YES:**
-  - Execute the full `@update-context` flow as documented in `.github/spec-scout/update-context.md`.
-  - After the update flow completes, `needContextReload` will be set to `true` by that flow.
-  - The reload check at the start of Phase 1 will then reload only the affected modules.
-  - Once reloaded, proceed into Phase 1 normally.
-
----
-
-## Phase 1: Context Gathering & Deep Tech Analysis
-**Goal:** Establish a 100% comprehensive understanding of the existing technical implementation and the problem context before proposing solutions.
-
-### 1A. Context Review (MANDATORY FIRST STEP)
+### 1C. Context Review
 * **🔁 CHECK:** Perform the `needContextReload` check (see "FIRST STEP AT EVERY PHASE" above) before anything else.
 * **ACTION:** **Execute the Smart Context Loading Protocol (Step 0A) above.**
     1. Read `.github/spec-scout/context/index.md` → Get the global module map and identify relevant modules.
@@ -230,7 +199,7 @@ Before executing anything, ask:
 * **CONSTRAINT:** You **MUST** complete this context review before proceeding to repository scanning or code analysis.
 * **PURPOSE:** The module context files define the authoritative "current state" of each domain and serve as the foundation for all technical decisions.
 
-### 1B. Deep Repository & Consolidated Analytical Pass
+### 1D. Deep Repository & Consolidated Analytical Pass
 > **Operational note:** All sub-actions below are executed as a **single consolidated analytical pass** — repo scan, drift classification, boundary check, conflict detection, governance audit, and baseline test run happen in parallel internally. The user sees one structured report in Phase 1C, not incremental intermediate output.
 
 * **Repo Scan:** Scan the repository to map workflows and data structures, cross-referencing against the loaded module context files.
@@ -248,7 +217,7 @@ Before executing anything, ask:
 * **Anti-Hallucination Gate:** If any implementation pattern, configuration, or integration is encountered that is not described in any loaded module context file, note it as a gap — ask the user a targeted clarifying question if it is critical to the story.
 * **CONSTRAINT:** **DO NOT** suggest or perform any code modifications during this phase.
 
-### 1C. Context & Tech Report
+### 1E. Context & Tech Report
 * **ACTION:** Synthesize all findings from the single consolidated pass (1B) into one structured report:
     1.  **Issue Context Summary:** A concise restatement of the problem for confirmation.
     2.  **Loaded Context Summary:** List of all module context files loaded, why each was selected, and any modules that were missing/empty. Flag any module missing its `Module Ownership` block.

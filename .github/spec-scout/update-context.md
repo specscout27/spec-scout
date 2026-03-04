@@ -1,4 +1,4 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
 # @update-context Command Guide
 
 > ⚠️ **DISCLAIMER:** This entire flow operates under the assumption that **the current branch is already rebased and up-to-date with main**. A rebase confirmation is performed as the first step. If the branch is not up-to-date, the diff and context update will be inaccurate. Do not proceed unless rebase is confirmed.
@@ -15,6 +15,17 @@ The `@update-context` command keeps module context files synchronised with commi
 - Manually by typing `@update-context` in chat at any time.
 
 After a successful run, it sets the session flag `needContextReload: true` so that the copilot workflow reloads only the affected module files before the next phase.
+
+---
+
+## 🔗 Session Start Drift Check Integration
+
+The **Session Start: Commit Drift Check** (defined in `copilot-instructions.md`) runs automatically before P0 on every new session. It reads `index.md`'s `Baseline Commit:` field and compares it against the result of `git --no-pager log origin/main --oneline -1 2>/dev/null || git --no-pager log main --oneline -1 2>&1 | cat` HEAD.
+
+**How this interacts with this flow:**
+- If the Session Start Check has already confirmed that `[BASELINE_COMMIT] ≠ [HEAD_COMMIT]`, then when the user says YES to P0 and this flow begins, **Guard 3 in Step 2 (verify baseline commit exists in git history) does not need to re-run the comparison** — the result is already known. The flow can proceed directly from Guard 1 to the diff analysis.
+- If the Session Start Check was skipped (no `index.md`, or the check could not run), this flow must execute all guards in Step 2 normally.
+- The session flag `needContextReload` set by the Session Start Check is **always overwritten** by this flow's Step 9 once the update completes. There is no conflict between the two.
 
 ---
 
@@ -73,14 +84,12 @@ Expected field in index.md:
 - Record the extracted value as `[BASELINE_COMMIT]`.
 
 #### Guard 2: Get current main HEAD commit
-**Action:** Run:
+**Action:** Run the following single command (always use this exact form — it is pager-safe and handles remote-unavailable gracefully):
 ```bash
-git log origin/main --oneline -1
+git --no-pager log origin/main --oneline -1 2>/dev/null || git --no-pager log main --oneline -1 2>&1 | cat
 ```
-or (if remote is not available):
-```bash
-git log main --oneline -1
-```
+> **Why this form:** `git log` without `--no-pager` opens an interactive pager (`less`) that blocks indefinitely waiting for a keypress. The `2>/dev/null` on the first clause silently suppresses errors if `origin/main` is not available, and the `|| ... | cat` fallback then runs non-interactively. **Always use `--no-pager` and pipe through `cat` for every git log command in this workflow.**
+
 - Record this value as `[CURRENT_MAIN_HEAD]`.
 - **Only capture commits up to and including the latest main/master branch commit — do NOT include commits only on the current feature branch.**
 
@@ -91,7 +100,7 @@ git log main --oneline -1
 
 **Commit distance check:**
 ```bash
-git rev-list --count [BASELINE_COMMIT]..origin/main
+git --no-pager rev-list --count [BASELINE_COMMIT]..origin/main 2>&1 | cat
 ```
 - Record this as `[COMMIT_DISTANCE]`.
 - If `[COMMIT_DISTANCE]` > 5:
@@ -103,7 +112,7 @@ git rev-list --count [BASELINE_COMMIT]..origin/main
 
 **Action:** Retrieve the commit log between `[BASELINE_COMMIT]` and `[CURRENT_MAIN_HEAD]` (main only, not current branch commits):
 ```bash
-git log [BASELINE_COMMIT]..origin/main --oneline
+git --no-pager log [BASELINE_COMMIT]..origin/main --oneline 2>&1 | cat
 ```
 
 Display these commits to the user as part of the summary in Step 5.
@@ -114,14 +123,14 @@ Display these commits to the user as part of the summary in Step 5.
 
 **Action:** Get the list of files changed between the baseline and main HEAD:
 ```bash
-git diff --name-status [BASELINE_COMMIT]..origin/main
+git --no-pager diff --name-status [BASELINE_COMMIT]..origin/main 2>&1 | cat
 ```
 
 Also check for staged/unstaged local changes:
 ```bash
-git diff --cached --name-status
-git diff --name-status
-git ls-files --others --exclude-standard
+git --no-pager diff --cached --name-status 2>&1 | cat
+git --no-pager diff --name-status 2>&1 | cat
+git ls-files --others --exclude-standard 2>&1 | cat
 ```
 
 **Focus on:** Source files only (exclude test files, build artifacts, etc.)
