@@ -1,4 +1,4 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
 # Session-Resilient Temporary File Protocol
 
 **Purpose:**  
@@ -10,6 +10,15 @@ To ensure session continuity and prevent data loss, a temporary file will be mai
 
 **When to Create/Update:**  
 - The temporary file should be created at the end of Phase 1 (after user approval), and updated at the end of each subsequent phase.
+- Additionally, the **Session Start: Commit Drift Check** result must be written into the temp file as soon as it is created (at Phase 1 write-time), so that `@continue` restorations can inherit the correct drift state without re-running the git check.
+
+**Session Start Drift State (persisted in temp file):**  
+When creating the temp file after Phase 1, include a `## Session Start Drift Check` block with:
+- `commitDriftDetected: true | false`
+- `baselineCommit: <sha or "not found">`
+- `headCommit: <sha or "not found">`
+
+**Restoration via `@continue`:** When restoring a session, the agent must read this block and restore the `commitDriftDetected` flag. If `commitDriftDetected: true` and no `@update-context` has been run in this session yet, `needContextReload` should be set to `true` to preserve the original drift warning.
 
 **Update Protocol:**  
 - At the end of each phase (after user approval and before proceeding), append a crisp summary of that phase’s key outcomes, decisions, and any user-provided clarifications or answers to open questions.

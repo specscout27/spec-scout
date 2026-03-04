@@ -1,4 +1,4 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
 # 🤖 AI Agent Workflow Instructions: Refined for SDD Governance
 
 ### Escape Hatch: @noscout
@@ -79,7 +79,10 @@ The agent must **NEVER** execute `git commit`, `git push`, `git stash`, `git che
 
 `needContextReload` is a **session-level state flag** shared between the `@update-context` command and this workflow.
 
-**Set to `true`:** By the `@update-context` flow (Step 9 in `update-context.md`) after context files are updated.  
+**Set to `true`:** By either of the following two mechanisms:
+  1. By the `@update-context` flow (Step 9 in `update-context.md`) after context files are updated.
+  2. By the **Session Start: Commit Drift Check** (see section below) when the baseline commit ID in `index.md` does not match the current HEAD commit on main.
+
 **Set to `false`:** By this workflow immediately after reloading the affected module context files (see below).
 
 ### 🚨 FIRST STEP AT EVERY PHASE — Reload Check (MANDATORY)
@@ -190,6 +193,41 @@ After loading all relevant modules, evaluate the story against the criteria belo
 
 ---
 
+## 🔍 Session Start: Commit Drift Check (MANDATORY — runs once per session, before P0)
+
+**Goal:** At the very start of every new session — before P0 is offered — automatically detect whether the context baseline in `index.md` is behind the current HEAD on main. This ensures `needContextReload` is set correctly even when `@update-context` was never run in the current session.
+
+> **Run-once guard:** This check executes exactly **once per session**, on the first user prompt. It must NOT re-run on subsequent prompts or at the start of each phase.
+
+### Steps
+
+1. **Read the baseline commit ID from `index.md`:**
+   - Read `.github/spec-scout/context/index.md` and extract the `Baseline Commit:` field (format: `Baseline Commit: <commit-sha>`).
+   - If the file does not exist or the field is absent, print:
+     > `"⚠️ No context baseline found in index.md — skipping commit drift check. Context may not have been generated yet."`
+   - Then skip to P0 as normal (do not set `needContextReload`).
+
+2. **Get the HEAD commit on main:**
+   - Run: `git log main --oneline -1`
+   - If `main` is not available locally, fall back to: `git log origin/main --oneline -1`
+   - Extract `[HEAD_COMMIT]` (the full or short SHA from the output).
+
+3. **Compare the two commit IDs:**
+
+   - **If `[BASELINE_COMMIT]` == `[HEAD_COMMIT]`:**
+     - Context is up-to-date. Set `needContextReload: false`.
+     - No output needed — proceed silently to P0.
+
+   - **If `[BASELINE_COMMIT]` ≠ `[HEAD_COMMIT]`:**
+     - Context is stale. Set `needContextReload: true` in session state.
+     - Print:
+       > `"🔍 Session drift check: context baseline (` + [BASELINE_COMMIT] + `) is behind HEAD (` + [HEAD_COMMIT] + `). Context is likely stale — running P0 is strongly recommended."`
+     - Proceed to P0 with the **drift-aware prompt** (see P0.0 below).
+
+> **RULE:** This check is read-only. It runs `git log` (read) and reads `index.md` (read). No writes are performed. The NO-GIT-WRITES constraint still applies.
+
+---
+
 ## Phase P0: Drift Analysis & Context Update (Optional — ask user before executing)
 
 **Goal:** Ensure context is up-to-date with main before beginning analysis. This phase is offered to the user before Phase 1 on every new story/prompt.
@@ -198,8 +236,14 @@ After loading all relevant modules, evaluate the story against the criteria belo
 
 ### P0.0 — Ask the User
 
-Before executing anything, ask:
+Before executing anything, ask. Use the appropriate variant based on the result of the Session Start: Commit Drift Check:
 
+**Variant A — Drift detected (Session Start Check set `needContextReload: true`):**
+> "**⚠️ Context drift detected. The baseline commit in `index.md` is behind the current HEAD on main.**
+> Running a context update (P0) is strongly recommended to avoid working with stale specs.
+> _(Reply **YES** to run context update, or **NO** to skip and proceed directly to Phase 1 with the stale context.)_"
+
+**Variant B — No drift detected or check was skipped:**
 > "**Would you like to run a context drift check (P0) before we begin?**
 > This will compare the module context to main and update any drifted specs.
 > _(Reply **YES** to run context update, or **NO** to skip and proceed directly to Phase 1.)_"
@@ -207,7 +251,7 @@ Before executing anything, ask:
 - **If user says NO (or skips):**
   - Print the following high-level warning and immediately jump to Phase 1:
     > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
-  - Set the `needContextReload` flag to `false` (no reload triggered).
+  - **Do NOT override `needContextReload` to `false` here.** If the Session Start Check already set it to `true`, preserve that value so the per-phase reload check in Phase 1A still fires.
   - Do **not** revisit context update for the rest of this session.
 
 - **If user says YES:**
