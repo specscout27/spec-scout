@@ -1,18 +1,20 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
+<!-- Compatible with: copilot-instructions.md v3.1.0 -->
 # ⚖️ The SDD Constitution
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Scope:** Universal governing laws for all code generation, analysis, and implementation tasks.
 
 ---
 
-## Article I: Data Sanctity (PII & Secrets)
+## Article I [C1]: Data Sanctity (PII & Secrets)
 - **Directive:** Zero-tolerance for plaintext PII or Secrets in any persistent storage, log, or telemetry.
 - **Rules:**
     - Any variable matching sensitive patterns (e.g., email, SSN, tokens, passwords, API keys) must be masked or redacted before reaching a `log`, `print`, or `telemetry` interface.
     - If no masking utility exists in the current repo, you must propose creating a `Sanitizer` service before implementing logic that handles sensitive data.
 
-## Article II: The Resilience Threshold (Coverage)
+## Article II [C2]: The Resilience Threshold (Coverage)
 - **Directive:** Code quality is measured by its mathematical proof of reliability.
+- **Scope:** This mandate applies to **application logic only** — configuration files, infrastructure-as-code, generated code, and test helpers are excluded from the coverage threshold.
 - **Rules:**
     - All new features or logic changes must target a minimum of **90% code coverage**.
     - Test suites must include:
@@ -21,7 +23,7 @@
         3. **Edge Cases:** Boundary conditions (nulls, empty strings, max/min values).
     - If legacy code in the task scope has <90% coverage, your plan must include bringing that specific scope up to the mandate.
 
-## Article III: Scope Preservation & Refactoring
+## Article III [C3]: Scope Preservation & Refactoring
 - **Directive:** Maintain strict boundaries between the current User Story/Spec and broader technical debt.
 - **Rules:**
     - **Isolation:** You are strictly forbidden from performing "drive-by" refactoring of code outside the immediate scope of the current User Story or Specification.

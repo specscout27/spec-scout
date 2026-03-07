@@ -4,7 +4,7 @@
 > A governed, AI-assisted workflow that forces Copilot to read your codebase spec _before_ writing a single line — and waits for your approval at every step.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Framework Version](https://img.shields.io/badge/Framework-v3.0.0-blue)](CHANGELOG.md)
+[![Framework Version](https://img.shields.io/badge/Framework-v3.1.0-blue)](CHANGELOG.md)
 [![Works With](https://img.shields.io/badge/Works%20With-GitHub%20Copilot%20Chat-8957e5)](https://github.com/features/copilot)
 
 ---
@@ -155,5 +155,5 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md). All contributions are welcome �
 
 ## License
 
-[MIT](LICENSE) · Framework Version v3.0.0 · © 2026 specscout27
+[MIT](LICENSE) · Framework Version v3.1.0 · © 2026 specscout27
 

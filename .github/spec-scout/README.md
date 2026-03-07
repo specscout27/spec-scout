@@ -42,7 +42,7 @@ your-repo/
 ├── .github/
 │   ├── copilot-instructions.md         ← Main AI workflow instructions
 │   ├── summary-template.md             ← Template for per-story summaries
-│   └── sdd/
+│   └── spec-scout/
 │       ├── CONSTITUTION.md             ← Governance rules
 │       ├── code-to-spec.md             ← First-time context generator
 │       ├── update-context.md           ← Context sync guide
@@ -287,4 +287,4 @@ Use this when setting up SDD on a new repository:
 
 ---
 
-*Framework Version: v3.0.0 · Last Updated: March 2026*
+*Framework Version: v3.1.0 · Last Updated: March 2026*
