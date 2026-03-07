@@ -1,9 +1,11 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
+<!-- Compatible with: copilot-instructions.md v3.1.0 -->
 # Story Summary: [Story Title]
 
 **Date:** [ISO 8601 date]
 **Branch:** [feature branch name]
 **Author:** [author / team]
+**Session Temp File:** `.github/[Story_Title].tmp.md`
 
 ---
 
@@ -62,18 +64,36 @@ _Key source files changed (not test files — just the implementation):_
 | Story-impacted tests | PASS ✅ / FAIL ❌ |
 | Full test suite | PASS ✅ / FAIL ❌ (pre-existing failures noted below if any) |
 | Code coverage (new/changed code) | [N]% — meets ≥ 90% mandate ✅ / below threshold ⚠️ |
-| PII / secrets check | COMPLIANT ✅ / FLAG ⚠️ |
-| Scope preservation | No out-of-scope changes ✅ / Suggested refactorings flagged ℹ️ |
+| PII / secrets check [C1] | COMPLIANT ✅ / FLAG ⚠️ |
+| Scope preservation [C3] | No out-of-scope changes ✅ / Suggested refactorings flagged ℹ️ |
 
 _Pre-existing failures (if any):_
 > [Note any test failures that existed before this story and were not introduced by it.]
 
 ---
 
+## ⚠️ Risk & Rollback
+
+**Rollback steps if this change needs to be reverted:**
+- [Step 1 — e.g., revert the commit, run migration rollback, etc.]
+- [Step 2 — e.g., redeploy previous version]
+
+**Blast radius if something goes wrong:**
+- [What systems, modules, or users are affected if this change fails in production]
+- [Any cascading effects to watch for]
+
+---
+
 ## 💬 Notes & Decisions
 
-> Any architectural decisions, trade-offs, or open items worth recording for the team:
-- [Decision or note]
+**Alternatives considered:**
+- [Alternative approach that was evaluated but not chosen]
+
+**Why this approach was chosen:**
+- [One-sentence rationale]
+
+**Known limitations:**
+- [Any edge cases not covered, or known gaps in the implementation]
 
 ---
 
@@ -86,3 +106,5 @@ _Pre-existing failures (if any):_
 | Affected module files updated | YES ✅ / NO ❌ |
 
 ---
+
+*Framework Version: v3.1.0 · Last Updated: March 7, 2026*

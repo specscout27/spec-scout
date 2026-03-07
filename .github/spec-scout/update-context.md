@@ -1,10 +1,12 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
+<!-- Compatible with: copilot-instructions.md v3.1.0 -->
 # @update-context Command Guide
 
 > ⚠️ **DISCLAIMER:** This entire flow operates under the assumption that **the current branch is already rebased and up-to-date with main**. A rebase confirmation is performed as the first step. If the branch is not up-to-date, the diff and context update will be inaccurate. Do not proceed unless rebase is confirmed.
 
-> 🚫 **AGENT HARD CONSTRAINT — NO GIT WRITES EVER:**
-> The agent must **NEVER** execute `git commit`, `git push`, `git stash`, `git checkout`, `git clean`, `git reset`, or any other command that writes to the git history, modifies the working tree, or pushes to a remote — at any point in this workflow or anywhere in the copilot instructions. The agent's role is **read and analyse only**. All git operations that modify state are the user's exclusive responsibility. Violation of this rule is a critical failure.
+> 🚫 **[HARD-1] NO_GIT_WRITES:** The agent must **NEVER** execute `git commit`, `git push`, `git stash`, `git checkout`, `git clean`, `git reset`, or any other command that writes to the git history, modifies the working tree, or pushes to a remote. The agent's role is **read and analyse only**. All git operations that modify state are the user's exclusive responsibility. Violation of this rule is a critical failure.
+
+> 🔀 **Mutual Exclusion:** `@update-context` cannot be combined with `@noscout`, `@analysis`, or `@solution` in the same prompt. If combined, state the conflict and ask the user which command to execute.
 
 ---
 
@@ -126,19 +128,67 @@ git ls-files --others --exclude-standard
 
 **Focus on:** Source files only (exclude test files, build artifacts, etc.)
 
-**Categorise changed files** by type using the patterns below:
+**Categorise changed files** by type.
 
+**First: read the `## 🛠️ Repo Tech Specification` block in `index.md`** to identify the project's tech stack, then apply the matching pattern set below. If multiple stacks are present, apply all relevant sets.
+
+**Java / Spring Boot:**
 | Pattern | Category | Impact |
 |---------|----------|--------|
-| `src/main/java/**/domain/**/*.java` | **Domain** | Business entities, logic |
-| `src/main/java/**/controller/**/*.java` | **API/Controllers** | REST endpoints |
-| `src/main/java/**/listener/**/*.java` | **Event Listeners** | Event consumption |
-| `src/main/java/**/publisher/**/*.java` | **Event Publishers** | Event publishing |
-| `src/main/java/**/repository/**/*.java` | **Repositories** | Data persistence |
-| `src/main/java/**/config/**/*.java` | **Configuration** | System config |
-| `src/main/resources/**/*.properties` | **Config Files** | Application properties |
-| `pom.xml` / `build.gradle` / `package.json` / `requirements.txt` / `go.mod` | **Build / Dependency** | ⚠️ May require Repo Tech Spec update in `index.md` |
-| `Dockerfile` / `docker-compose.yml` / `*.tf` | **Infra / Runtime** | ⚠️ May require Repo Tech Spec update in `index.md` |
+| `**/domain/**/*.java` | **Domain** | Business entities, logic |
+| `**/controller/**/*.java` | **API/Controllers** | REST endpoints |
+| `**/listener/**/*.java` | **Event Listeners** | Event consumption |
+| `**/publisher/**/*.java` | **Event Publishers** | Event publishing |
+| `**/repository/**/*.java` | **Repositories** | Data persistence |
+| `**/config/**/*.java` | **Configuration** | System config |
+| `**/resources/**/*.properties`, `**/resources/**/*.yml` | **Config Files** | Application properties |
+
+**Node.js / TypeScript:**
+| Pattern | Category | Impact |
+|---------|----------|--------|
+| `**/models/**`, `**/entities/**`, `**/domain/**` | **Domain** | Business entities |
+| `**/routes/**`, `**/controllers/**`, `**/handlers/**` | **API/Controllers** | REST endpoints |
+| `**/listeners/**`, `**/consumers/**`, `**/subscribers/**` | **Event Listeners** | Event consumption |
+| `**/publishers/**`, `**/producers/**` | **Event Publishers** | Event publishing |
+| `**/repositories/**`, `**/dal/**`, `**/db/**` | **Repositories** | Data persistence |
+| `**/config/**`, `**/*.config.ts`, `**/*.config.js` | **Configuration** | System config |
+
+**Python:**
+| Pattern | Category | Impact |
+|---------|----------|--------|
+| `**/models/**`, `**/domain/**`, `**/entities/**` | **Domain** | Business entities |
+| `**/views/**`, `**/routers/**`, `**/api/**` | **API/Controllers** | REST endpoints |
+| `**/listeners/**`, `**/consumers/**` | **Event Listeners** | Event consumption |
+| `**/publishers/**`, `**/producers/**` | **Event Publishers** | Event publishing |
+| `**/repositories/**`, `**/db/**`, `**/persistence/**` | **Repositories** | Data persistence |
+| `**/config/**`, `**/settings/**` | **Configuration** | System config |
+
+**Go:**
+| Pattern | Category | Impact |
+|---------|----------|--------|
+| `**/domain/**`, `**/model/**`, `**/entity/**` | **Domain** | Business entities |
+| `**/handler/**`, `**/controller/**`, `**/api/**` | **API/Controllers** | REST endpoints |
+| `**/listener/**`, `**/consumer/**` | **Event Listeners** | Event consumption |
+| `**/publisher/**`, `**/producer/**` | **Event Publishers** | Event publishing |
+| `**/repository/**`, `**/store/**`, `**/db/**` | **Repositories** | Data persistence |
+| `**/config/**` | **Configuration** | System config |
+
+**Language-Agnostic Fallback (apply if no stack-specific pattern matches):**
+
+If a changed file does not match any pattern above, categorise by file extension and directory name heuristics:
+- File in a directory named `domain`, `model`, `entity`, `core` → **Domain**
+- File in a directory named `api`, `controller`, `route`, `handler`, `view` → **API/Controllers**
+- File in a directory named `listener`, `consumer`, `subscriber` → **Event Listeners**
+- File in a directory named `publisher`, `producer`, `event` → **Event Publishers**
+- File in a directory named `repo`, `repository`, `db`, `store`, `persistence`, `dal` → **Repositories**
+- File in a directory named `config`, `settings`, `configuration` → **Configuration**
+- If no heuristic matches → categorise as **Uncategorised — manual review required** and note it in the report
+
+**All stacks — Build / Infra files:**
+| File | Category | Impact |
+|------|----------|--------|
+| `pom.xml`, `build.gradle`, `package.json`, `requirements.txt`, `go.mod`, `Gemfile`, `*.csproj` | **Build / Dependency** | ⚠️ May require Repo Tech Spec update in `index.md` |
+| `Dockerfile`, `docker-compose.yml`, `*.tf`, `*.yaml` (infra) | **Infra / Runtime** | ⚠️ May require Repo Tech Spec update in `index.md` |
 
 > **Tech Spec Drift Rule:** If any Build/Dependency or Infra/Runtime file is in the changed set, flag it in the report as a potential **Repo Tech Spec update** required in `index.md` (`## 🛠️ Repo Tech Specification`). This will be handled in Step 7.
 
@@ -317,7 +367,7 @@ Confidence: HIGH / MEDIUM / LOW
 ```
 
 **Handle user response:**
-- **APPROVE:** Apply the AFTER block verbatim using `replace_string_in_file`. Use 3–5 lines of surrounding context for uniqueness.
+- **APPROVE:** Apply the AFTER block verbatim using the available file edit tool. Use 3–5 lines of surrounding context for uniqueness.
 - **EDIT:** Show the AFTER block as a starting point, ask the user to supply their version, then apply the user-provided content.
 - **SKIP:** Move to next change without modifying the file.
 - **CANCEL:** Stop all remaining changes. Any already-approved changes remain saved.
@@ -526,15 +576,15 @@ Use this matrix to determine which context files to update:
 ## Tools to Use
 
 **For Analysis:**
-- `semantic_search` — Understand code semantics and purpose
-- `grep_search` — Find specific patterns in code
-- `read_file` — Read current context content and code files
+- Use the available **code semantic search tool** to understand code purpose and semantics.
+- Use the available **pattern search tool** (e.g., grep) to find specific strings or patterns in code.
+- Use the available **file read tool** to read current context content and source code files.
 
 **For Updates:**
-- `replace_string_in_file` — Apply approved updates (use sufficient context: 3–5 lines before/after)
+- Use the available **file edit tool** to apply approved updates. Always use 3–5 lines of surrounding context to ensure uniqueness of the replacement target.
 
 **For Git Operations:**
-- `run_in_terminal` — Execute git commands (use with care)
+- Use the available **terminal execution tool** to run git read commands (e.g., `git log`, `git diff`). Never run git write commands — see [HARD-1].
 
 ---
 
@@ -548,5 +598,5 @@ Use this matrix to determine which context files to update:
 
 ---
 
-**Last Updated:** March 3, 2026  
-**Version:** 3.0 (Consolidated from updatecontext-guide.md — includes P0 integration, needContextReload flag, Drift Classification System, surgical 5C update steps, commit enforcement)
+**Last Updated:** March 7, 2026
+**Version:** 3.1.0 (v3.0.0 improvements: tech-stack-conditional file patterns, tool-name-agnostic instructions, mutual exclusion note, [HARD-1] label alignment)
