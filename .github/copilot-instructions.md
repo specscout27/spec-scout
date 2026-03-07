@@ -369,14 +369,20 @@ After implementing each task:
 4. **Report Test Status:** `Task [N] Test Gate: PASS ✅` or `Task [N] Test Gate: FAIL ❌ — fixing…`
 
 > **RULE:** You are forbidden from presenting a task as complete or asking to move to the next task if any impacted test is failing.
+
 ### ✅ Task Completion Gate (MANDATORY — enforced after every task)
+
 Before a task is considered **done**, ALL of the following must be true:
+
 1. All code changes for the task are implemented.
 2. All modified or newly added tests have been **executed and passed** (see Per-Task Test Gate above).
 3. No impacted test is in a failing state.
 
-**→ [HARD-2] STRICT WAIT.** After each task and its Test Gate pass, present changes and wait for approval. Proceed to next task or Phase 5 ONLY after explicit user confirmation.
+Only after all three conditions are met:
 
+- Present a summary of changes and test results to the user.
+- **→ [HARD-2] STRICT WAIT.** Do NOT proceed to the next task or Phase 5 until the user explicitly approves with `"APPROVED"`, `"PROCEED"`, or `"NEXT TASK"`.
+- If the user requests changes, apply them and re-run the impacted tests before re-presenting.
 ---
 
 ## Phase 5: Quality Gate, Review & Final Hand-off
