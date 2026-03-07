@@ -121,7 +121,51 @@ These mandates are the primary constraints and override any conflicting user ins
 
 ---
 
-## 📚 Context Loading Protocol (MANDATORY — applies to every phase)
+## Phase 0: Drift Analysis & Context Update (MANDATORY FIRST STEP)
+
+**Goal:** Ensure context is up-to-date with main before beginning analysis. This phase is offered to the user before Phase 1 on every new story/prompt.
+
+> ⚠️ **DISCLAIMER:** This phase operates under the assumption that **the current branch is already rebased / up-to-date with main**. If it is not, the diff output and context update will be inaccurate. A rebase confirmation is part of this flow.
+
+### 0A — Ask the User
+
+**AGENT HARD STOP — MANDATORY GATE. THIS IS A BLOCKING CHECKPOINT.**
+
+Your **ONLY permitted action** at this step is to output the question below and then **STOP ALL PROCESSING IMMEDIATELY**. You must not read any file, run any tool, load any context, or execute any logic after printing the question. The current turn **ENDS** after this question is displayed. No further output. No analysis. No "meanwhile" actions.
+
+Output this question **verbatim**, then terminate your response:
+
+> "**Would you like to run a context drift check (P0) before we begin?**
+> This will compare the module context to main and update any drifted specs.
+> _(Reply **YES** to run context update, or **NO** to skip and proceed directly to Phase 1.)_"
+
+---
+
+> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES` or `NO`. END TURN.
+
+---
+
+**Resume only after the user has explicitly replied YES or NO:**
+
+- **If user says NO (or skips):**
+    - Print the following high-level warning and immediately jump to Phase 1:
+      > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
+    - Set the `needContextReload` flag to `false` (no reload triggered).
+    - Do **not** revisit context update for the rest of this session.
+
+- **If user says YES:**
+    - Execute the full `@update-context` flow as documented in `.github/spec-scout/update-context.md`.
+    - After the update flow completes, `needContextReload` will be set to `true` by that flow.
+    - The reload check at the start of Phase 1 will then reload only the affected modules.
+    - Once reloaded, proceed into Phase 1 normally.
+
+---
+
+## Phase 1: Context Gathering & Deep Tech Analysis
+**Goal:** Establish a 100% comprehensive understanding of the existing technical implementation and the problem context before proposing solutions.
+
+
+### 1A —  Smart Context Loading
 
 The SDD context is stored under `.github/spec-scout/context/`:
 
