@@ -32,9 +32,6 @@ Versioning follows [Semantic Versioning](https://semver.org/):
 - `@continue` — Restore a previous session from its `.tmp.md` file
 - `@noscout` — Bypass SDD entirely for a single message
 
-#### Execution Modes
-- **STRUCTURED** — low-ceremony path for single-module, low-drift stories
-- **FULL GOVERNED** — full phase execution for multi-module, schema-changing, or conflicting stories
 
 #### Governance
 - MIT License

@@ -4,7 +4,6 @@
 **Date:** [ISO 8601 date]
 **Branch:** [feature branch name]
 **Author:** [author / team]
-**Execution Mode:** [STRUCTURED / FULL GOVERNED]
 
 ---
 
