@@ -1,4 +1,5 @@
-<!-- Framework Version: v3.0.0 -->
+<!-- Framework Version: v3.1.0 -->
+<!-- Compatible with: copilot-instructions.md v3.1.0 -->
 # ROLE
 Act as a Senior Principal Architect. Your goal is to map this repository's architecture and generate a structured "Software Design Document" (SDD) within the repository.
 
@@ -12,7 +13,14 @@ Generate and maintain content in the following Markdown files:
 
 > 🚫 **AGENT CONSTRAINT:** The agent must NEVER automatically stash changes, checkout a branch, reset files, or remove any files during this guard. All remediation is the user's responsibility. The agent only reads status and reports.
 
-**Before executing any phase, run the checks below using `run_in_terminal`. Both guards must pass.**
+> 💡 **Terminal Unavailability Fallback:** If the terminal execution tool is unavailable (e.g., read-only or plan-only agent context), ask the user to paste the output of the following commands manually:
+> ```bash
+> git rev-parse --abbrev-ref HEAD
+> git status --porcelain
+> ```
+> Use the pasted output to evaluate the guards below. Do not proceed until both outputs are received.
+
+**Before executing any phase, run the checks below. Both guards must pass.**
 
 ---
 
@@ -159,7 +167,7 @@ cat build.gradle | head -40
 
 **For Node.js projects:**
 ```bash
-cat package.json | python3 -m json.tool 2>/dev/null || cat package.json | head -40
+cat package.json | head -40
 ```
 
 **For Python projects:**
@@ -269,7 +277,7 @@ When a conflict is detected during Step 2C:
    - Which modules are involved (current module + conflicting confirmed module).
    - Which entry point, domain object, or flow is contested.
    - The evidence from the code scan.
-4. **Propose exactly two resolution models** from:
+4. **Propose the most relevant two resolution models** from the three options below (select the two most applicable to the specific conflict type):
    - **Reassign Ownership** — move the contested responsibility entirely to one module; update the other module's `Explicit Non-Responsibilities` to exclude it.
    - **Extract Shared Module** — introduce a new module that owns the shared concern; both original modules declare it as an Integration Boundary and reference it in their ownership blocks.
    - **Introduce Integration Module** — introduce a dedicated adapter/integration module that brokers the cross-module interaction; both original modules' internal layers remain clean.
@@ -346,7 +354,7 @@ The Conflict Detection Rules and Conflict Handling Protocol are **defined and en
 1. **Freeze progression** — do not advance to Phase 2.
 2. **Classify** the conflict type (using the four-rule table in Step 2C above).
 3. **Describe explicitly** — which modules, which entry point / domain object / flow is contested, evidence.
-4. **Propose two resolution models** (Reassign Ownership / Extract Shared Module / Introduce Integration Module).
+4. **Propose the most relevant two resolution models** (Reassign Ownership / Extract Shared Module / Introduce Integration Module).
 5. **Wait for `RESOLVE [model name]`** from the user.
 6. **Apply the resolution** to affected module ownership blocks and re-run the boundary check.
 
@@ -395,6 +403,12 @@ Before deleting `checkpoint.md`, confirm the following block exists and is accur
 ---
 
 ## Step 4C: Delete `checkpoint.md`
+
+> ⚠️ **Before deleting:** Open both `checkpoint.md` and `index.md` side by side and verify:
+> - The `## Context Baseline` block in `index.md` contains the exact `[BASELINE_COMMIT]` from `checkpoint.md`.
+> - The `## 🛠️ Repo Tech Specification` block in `index.md` matches what was assembled in Phase 1B.
+> - All modules listed in `checkpoint.md` are present as rows in the `index.md` Global Responsibility Index.
+> If any item above is missing → write it to `index.md` now before deleting. There is no undo once `checkpoint.md` is deleted.
 
 Once Step 4A and 4B are both satisfied:
 
