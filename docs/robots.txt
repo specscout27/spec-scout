@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://specscout27.github.io/spec-scout/sitemap.xml

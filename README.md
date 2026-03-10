@@ -2,10 +2,13 @@
 
 > **Spec-Driven Development (SDD) for GitHub Copilot.**
 > A governed, AI-assisted workflow that forces Copilot to read your codebase spec _before_ writing a single line — and waits for your approval at every step.
+>
+> 🌐 **[specscout27.github.io/spec-scout](https://specscout27.github.io/spec-scout/)** — Project website &amp; overview
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Framework Version](https://img.shields.io/badge/Framework-v3.1.0-blue)](CHANGELOG.md)
 [![Works With](https://img.shields.io/badge/Works%20With-GitHub%20Copilot%20Chat-8957e5)](https://github.com/features/copilot)
+[![Website](https://img.shields.io/badge/Website-specscout27.github.io%2Fspec--scout-8957e5)](https://specscout27.github.io/spec-scout/)
 
 ---
 
