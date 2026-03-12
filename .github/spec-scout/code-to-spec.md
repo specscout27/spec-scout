@@ -128,15 +128,16 @@ Once your working tree is clean, re-run the code-to-spec prompt.
 ---
 
 # OPERATIONAL PROTOCOL (STRICT GATING & RESILIENCE)
-1. **No Auto-Advance**: You are prohibited from moving to a new module or phase without explicit user permission.
+1. **Gating Scope**: User confirmation is required at **two points only**: (a) after module identification in Phase 1C, and (b) when a conflict is detected during Phase 2 and cannot be resolved without a user decision. For all other steps — including individual module flow analysis — the agent proceeds automatically without stopping.
 2. **Session Persistence**: Always check `.github/spec-scout/context/checkpoint.md` first. If it exists, ask: "I found a previous session. Should I resume from [Last Verified Module]?"
-3. **Correction Loop**: If the user says "Add X" or "Change Y":
+3. **Correction Loop**: If the user provides feedback after a confirmation gate:
   - Update the internal logic.
   - **Re-display the ENTIRE updated summary** for that flow/module.
   - Ask: "I have updated the flow. Please review the full version again. Type 'CONFIRM' to lock this or provide further changes."
-4. **Keyword Recognition**: Only advance when the user provides: "CONFIRM", "PROCEED", or "APPROVED".
-5. **Conflict Alert (Cross-Module)**: If a new flow in Module B contradicts a previously "CONFIRMED" flow in Module A — or if the same entry point / domain object is claimed by more than one module — flag the discrepancy immediately, classify it, and apply the **Conflict Handling Protocol** (see Phase 2) before proceeding.
+4. **Keyword Recognition**: Use `"PROCEED"` or `"APPROVED"` for phase-level gates. Use `"RESOLVE [model name]"` for conflict resolution. `"CONFIRM"` is only required when the agent has explicitly stopped and asked for it (module identification gate or post-conflict resolution review).
+5. **Conflict Alert (Cross-Module)**: If a new flow in Module B contradicts a previously confirmed flow in Module A — or if the same entry point / domain object is claimed by more than one module — flag the discrepancy immediately, classify it, and apply the **Conflict Handling Protocol** (see Phase 2) before proceeding.
 6. **Ownership Completeness**: Every module file written to disk **MUST** contain a `## Module Ownership` block (see Phase 2). A module without this block is considered incomplete and must not be marked [VERIFIED] in `checkpoint.md`.
+7. **Auto-Write Rule**: For any module that completes Step 2C with **no conflict detected**, the agent MUST immediately write the `.md` file to disk, mark the module [VERIFIED] in `checkpoint.md`, and proceed to the next module — **without stopping to ask the user for confirmation**.
 
 ---
 
@@ -216,7 +217,28 @@ grep -E 'pytest|unittest' requirements.txt pyproject.toml 2>/dev/null | head -5
       Use this commit hash to detect new changes via `@update-context`.
     ```
   - **IMPORTANT:** The `## Context Baseline` block AND the `## 🛠️ Repo Tech Specification` block **MUST both be written into `.github/spec-scout/context/index.md`** (at the top, before the index table). `@update-context` reads both from `index.md`. `checkpoint.md` is a temporary file deleted upon completion.
-- **STOP**: Output the list of modules and the assembled Repo Tech Specification for review. Ask: "Do these module groupings and the tech specification look correct? Type 'PROCEED' to begin analysis or provide corrections."
+
+---
+
+> 🛑 **[MODULE IDENTIFICATION GATE — MANDATORY USER CONFIRMATION]**
+>
+> **STOP.** Output the following to the user and wait for explicit approval before starting any module analysis:
+>
+> - The complete list of identified modules (name + one-line description of domain responsibility).
+> - The assembled Repo Tech Specification block.
+>
+> Ask verbatim:
+> **"Here are the [N] modules I've identified and the tech specification for this repository. Please review:
+> - If the module list or groupings are incorrect, tell me what to add, remove, or merge.
+> - If the tech specification has errors, tell me what to correct.
+> Type 'PROCEED' to confirm the module list and begin analysis, or provide corrections."**
+>
+> **Do NOT begin Phase 2 or analyse any module until the user types `"PROCEED"` or `"APPROVED"`.**
+> **→ [HARD-2] STRICT WAIT.**
+
+---
+
+**On `PROCEED` / `APPROVED`:** Write `checkpoint.md` with all confirmed modules as [PENDING] and begin Phase 2.
 
 # PHASE 2: MODULE ANALYSIS (.github/spec-scout/context/modules/)
 
@@ -250,7 +272,7 @@ For the active module, identify every Entry Point and its flows:
 
 ---
 
-## Step 2C: Conflict Detection Check (run after EVERY module, before presenting for CONFIRM)
+## Step 2C: Conflict Detection Check (run after EVERY module, before writing to disk)
 
 Before presenting a module for user review, cross-check it against **all previously CONFIRMED modules** using these four rules:
 
@@ -261,9 +283,9 @@ Before presenting a module for user review, cross-check it against **all previou
 | **Flow Overlap** | A flow in this module could plausibly be owned by a previously confirmed module — i.e., it is not clearly mapped to exactly one primary module. |
 | **Integration Leak** | This module directly calls another module's internal layer (domain/repository) without routing through a declared boundary contract. |
 
-**If NO conflict is found:** proceed to present the module to the user for CONFIRM.
+**If NO conflict is found:** immediately write the module `.md` file to disk, mark it [VERIFIED] in `checkpoint.md`, announce the result, and proceed to the next [PENDING] module automatically (see Module Write Decision table below).
 
-**If ANY conflict is found:** immediately apply the **Conflict Handling Protocol** below — do NOT present the module for CONFIRM until the conflict is resolved.
+**If ANY conflict is found:** immediately apply the **Conflict Handling Protocol** below — do NOT write the file to disk until the conflict is resolved and re-verified.
 
 ---
 
@@ -271,7 +293,7 @@ Before presenting a module for user review, cross-check it against **all previou
 
 When a conflict is detected during Step 2C:
 
-1. **Freeze.** Do not present the module for CONFIRM. Do not write the file to disk.
+1. **Freeze.** Do not write the file to disk. Do not proceed to the next module.
 2. **Classify** the conflict using the rule table above (Ownership Conflict / Boundary Violation / Flow Overlap / Integration Leak).
 3. **Describe the conflict explicitly** to the user:
    - Which modules are involved (current module + conflicting confirmed module).
@@ -290,14 +312,20 @@ When a conflict is detected during Step 2C:
    - Update the current module's ownership block.
    - Update the previously confirmed module's ownership block in its `.md` file on disk.
    - If a new shared/integration module is introduced, add it as [PENDING] in `checkpoint.md`.
-   - Re-run Step 2C before presenting for CONFIRM.
+   - Re-run Step 2C before writing to disk or presenting to the user.
 
 > **RULE:** No conflict may be silently assumed away or deferred. Every conflict must be resolved and re-verified before either involved module is marked [VERIFIED].
 
 ---
 
-- **STOP**: Output: "Please review the ownership declaration and flows for [Module Name]. If changes are needed, state them. If accurate, type 'CONFIRM' to save this module file and update the checkpoint."
-- **ACTION ON CONFIRM**: Write the `.md` file to the directory (with `## Module Ownership` block intact) and mark the module as [VERIFIED] in `checkpoint.md`.
+### After Step 2C — Module Write Decision
+
+| Step 2C Outcome | Agent Action |
+|-----------------|-------------|
+| **No conflict detected** | Immediately write the `.md` file to disk (with `## Module Ownership` block intact), mark the module [VERIFIED] in `checkpoint.md`, announce `"✅ [Module Name] — no conflicts detected. Written and verified automatically."`, and proceed to the next [PENDING] module without stopping. |
+| **Conflict detected → resolved via Step 2D** | After the user provides `"RESOLVE [model name]"` and the resolution is applied, re-run Step 2C. If clean after re-check: present the updated module ownership + flows to the user and ask: `"The conflict has been resolved. Please review the updated ownership declaration and flows for [Module Name]. Type 'CONFIRM' to save this module file, or provide further changes."` **→ [HARD-2] STRICT WAIT.** Write to disk only on `"CONFIRM"`. |
+
+> **RULE:** The per-module `CONFIRM` gate is **only triggered after a conflict resolution**. Clean modules are never held for user approval.
 
 # PHASE 3: GLOBAL INDEX (.github/spec-scout/context/index.md)
 
