@@ -16,7 +16,7 @@ The `@update-context` command keeps module context files synchronised with commi
 - At the start of a new session via **Phase P0** (offered automatically), or
 - Manually by typing `@update-context` in chat at any time.
 
-After a successful run, it sets the session flag `needContextReload: true` so that the copilot workflow reloads only the affected module files before the next phase.
+After a successful run, it sets the flag `needContextReload: true` at Context Baseline section in `index.md` file. So, that the copilot workflow reloads only the affected module files before the next phase.
 
 ---
 
@@ -27,7 +27,6 @@ The **Session Start: Commit Drift Check** (defined in `copilot-instructions.md`)
 **How this interacts with this flow:**
 - If the Session Start Check has already confirmed that `[BASELINE_COMMIT] ≠ [HEAD_COMMIT]`, then when the user says YES to P0 and this flow begins, **Guard 3 in Step 2 (verify baseline commit exists in git history) does not need to re-run the comparison** — the result is already known. The flow can proceed directly from Guard 1 to the diff analysis.
 - If the Session Start Check was skipped (no `index.md`, or the check could not run), this flow must execute all guards in Step 2 normally.
-- The session flag `needContextReload` set by the Session Start Check is **always overwritten** by this flow's Step 9 once the update completes. There is no conflict between the two.
 
 ---
 
@@ -469,7 +468,7 @@ After all module updates are applied:
 
 ### Step 9: Set needContextReload Flag & Final Summary
 
-**Action:** Set `needContextReload = true` in the session state.
+**Action:** Set `needContextReload = true` at Context Baseline section in `index.md`
 
 **Generate final summary:**
 
