@@ -1,8 +1,6 @@
 <!-- Framework Version: v3.1.0 -->
 # 🤖 AI Agent Workflow Instructions: Refined for SDD Governance
-
 ---
-
 ## ⛔ HARD CONSTRAINTS (Always Active — Read Before Anything Else)
 
 | ID | Rule | Trigger |
@@ -17,14 +15,30 @@
 
 ---
 
+## 📂 Mandatory File Load (Session Start — Before Phase 0)
+
+The agent MUST explicitly read the following files before any phase begins.
+Listing in the manifest is not sufficient — each file below requires an
+active read action. Announce each load: "📂 Loaded: [filename]"
+
+| Order | File | Consumed By |
+|-------|------|-------------|
+| 1 | .github/spec-scout/CONSTITUTION.md | All phases — [C1][C2][C3] governance |
+| 2 | .github/spec-scout/update-context.md | Phase 0, P0 — drift levels + @update-context flow |
+| 3 | .github/spec-scout/session-tmp-file-protocol.md | All phases — temp file structure |
+| 4 | .github/spec-scout/smart-context-loading-protocol.md | All phases — smart context loading |
+| 5 | .github/spec-scout/summary-template.md | Phase 5D — summary output format |
+| 6 | .github/spec-scout/lite-mode.md | All phases — lite mode configuration |
+
 ## 📁 File Access Manifest
 
 **READ-ONLY (never modify):**
 - `.github/copilot-instructions.md`
 - `.github/spec-scout/CONSTITUTION.md`
-- `.github/spec-scout/code-to-spec.md`
 - `.github/spec-scout/update-context.md`
 - `.github/spec-scout/session-tmp-file-protocol.md`
+- `.github/spec-scout/smart-context-loading-protocol.md`
+- `.github/spec-scout/lite-mode.md`
 - `.github/spec-scout/summary-template.md`
 
 **WRITE-ALLOWED:**
@@ -77,6 +91,7 @@
 | `@update-context` | P0 update flow only | Update flow complete | `@noscout`, `@analysis`, `@solution` |
 | `@continue` | Restores from temp file, resumes next incomplete phase | Normal completion | `@noscout` |
 | `@noscout` | None — bypasses all SDD rules | N/A | All other commands |
+| `@lite` | P0 (skip) → 1 (lite) → 2 (lite) → 3 (lite) → 4 (lite) → 5 (lite) | Phase 5 complete | `@noscout`, `@analysis`, `@solution`, `@update-context` |
 
 > For `@continue` and `@update-context` full details, see their respective protocol files.
 > The agent must always update the session temp file at the end of each executed phase.
@@ -149,21 +164,61 @@ Output this question **verbatim**, then terminate your response:
 
 ---
 
-> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES` or `NO`. END TURN.
+> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES`, `yes`, `NO`, or `no` (case-insensitive). Any other input must be treated as unrecognised — re-display the question and wait again. END TURN.
 
 ---
 
-**Resume only after the user has explicitly replied YES or NO:**
+### 0B — Gate Evaluation (executes only in the turn after user replies to 0A)
 
-- **If user says NO (or skips):**
-    - Print the following high-level warning and immediately jump to Phase 1:
-      > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
-    - Do **not** revisit context update for the rest of this session.
+**Do not execute this section in the same turn as 0A.**
 
-- **If user says YES:**
-    - Execute the full `@update-context` flow as documented in `.github/spec-scout/update-context.md`.
-    - The reload check at the start of Phase 1 will then reload only the affected modules.
-    - Once reloaded, proceed into Phase 1 normally.
+Perform a strict literal string match on the user's reply only:
+- Strip whitespace from the reply.
+- Match against exactly: `YES` `yes` `NO` `no`
+- **Do NOT infer intent. "Sure", "yeah", "go ahead", "yep" are NOT valid — re-display 0A and stop.**
+
+---
+
+**BRANCH YES — triggers on: `YES` or `yes` (exact match only)**
+
+If the match is YES/yes, execute ALL of the following steps in order before doing anything else:
+
+1. Print: `"✅ P0 confirmed. Beginning context drift check now."`
+2. Read `.github/spec-scout/update-context.md`.
+    - If file EXISTS → execute its full documented flow completely. Do not skip any step.
+    - If file MISSING or EMPTY → notify the user explicitly, then run the inline fallback flow.
+3. Only after the full P0 flow above is finished → proceed to Phase 1.
+
+> **This branch is the forward-progress path. It is not optional when YES is matched.**
+
+---
+
+**BRANCH NO — triggers on: `NO` or `no` (exact match only)**
+
+If the match is NO/no, this is the SKIP path. Execute only this:
+
+Print verbatim:
+> `"⚠️ Context update skipped. There is a possibility that context files have drifted 
+  > from main. All analysis and changes in this session are based on the current loaded 
+  > context and repository code only. Proceed with awareness."`
+
+Then proceed to Phase 1.
+
+> **This branch is the exception path. It must never execute when YES was matched.**
+
+---
+
+**BRANCH INVALID — triggers on: anything that is not YES/yes/NO/no**
+
+Re-display the 0A question verbatim. Stop. Do not proceed.
+
+---
+
+**CRITICAL RULE — Anti-Default Prohibition:**
+The model must NOT select a branch based on which path is shorter, simpler, or
+requires less work. Branch selection is determined SOLELY by the exact string match
+result above. Defaulting to BRANCH NO without a matched `NO`/`no` string is a
+violation of [HARD-3] and [HARD-2].
 
 ## Phase 1: Context Gathering & Deep Tech Analysis
 
@@ -194,7 +249,7 @@ Output this question **verbatim**, then terminate your response:
 * **Drift Classification:** For each loaded module, compare the context file against the actual implementation and assign a Drift Level (D0–D3). Reference: `.github/spec-scout/update-context.md` Drift Classification System.
 
   | Level | Name | Definition | Example |
-        |-------|------|------------|---------|
+          |-------|------|------------|---------|
   | D0 | No Drift | Code matches module context exactly | Module file matches code exactly |
   | D1 | Minor Drift | Small additive change, no responsibility shift | New optional field added |
   | D2 | Structural Drift | Flow changed, new entry point, or ownership area altered | New flow not documented in module file |
@@ -309,32 +364,55 @@ Cross-module slots are ordered so the least-dependent module is implemented firs
 
 → If any condition is unmet: STOP. State which condition failed. Wait.
 
-- **ACTION:** Implement all changes for the **current Task**. Multiple related files may be modified simultaneously.
+- **ACTION:** Implement all changes for the **current Task**. Run Per-Task Test Gate and Task Completion Gate for each task. Multiple related files may be modified simultaneously.
 - **GOVERNANCE SAFEGUARD [C1][C2][C3]:** Before writing code, verify no logic violates the Governance Mandates.
 - **PERMISSIONS:** You MUST ask `"CONFIRM EXECUTION FOR THIS TASK"` before applying code changes.
-- **ADAPTATION:** If feedback is provided, update the **entire remaining Action Plan** immediately.
+- **ADAPTATION:** **ADAPTATION:** If feedback is provided, update the **entire remaining Action Plan** immediately,
+  then display the full updated plan to the user and wait for explicit confirmation
+  (`"CONFIRMED"`, `"PROCEED"`, or `"APPROVED"`) before resuming execution. Never silently
+  continue after absorbing a change.
 - **[HARD-3] CLARIFICATION GATE:** If during implementation you encounter an ambiguity not covered by any loaded context file or source code → stop and ask. Do not guess.
+- **MID-TASK INTERRUPTION RULE:** If the user asks a question or requests a change while a task
+  is actively in progress:
+    1. **Stop all code writing immediately.** Do not continue implementation until resolved.
+    2. Answer the question or assess the requested change fully.
+    3. If the change impacts the current task → apply it, then re-run the full Per-Task Test Gate
+       before presenting the task as complete.
+    4. If the change impacts future tasks → update the remaining Action Plan and **display the
+       updated plan to the user** before resuming. Wait for explicit user confirmation
+       (`"CONFIRMED"`, `"PROCEED"`, or `"APPROVED"`) before continuing.
+    5. Never silently absorb a change and continue — every mid-task change must be surfaced.
 
-### ✅ Per-Task Test Gate (MANDATORY — must pass before advancing to next task)
+### ✅ Per-Task Test Gate (MANDATORY — must pass before advancing to next task in Phase 4)
 
-After implementing each task:
+After implementing each task in Phase 4:
 
-1. **Identify Impacted Tests:** List all newly added tests and all existing tests whose covered code was modified.
-2. **Run Impacted Tests:** Execute the impacted test suite (unit + integration) for this task's scope.
-3. **Evaluate Results:**
+1. **Write Tests for New Logic (MANDATORY):** For every new function, method, branch, or behaviour
+   introduced in this task — write the corresponding unit or integration test within the same task.
+   You are forbidden from deferring test authorship to a later task or phase.
+2. **Update Impacted Tests:** Update any existing test whose covered code was modified by this task.
+3. **Build Verification:** Run a full compile/build check. The project must build successfully
+   before any test is executed. If the build fails, fix it before running tests.
+4. **Run Impacted Tests:** Execute all newly written tests and all existing tests whose covered
+   code was modified.
+5. **Evaluate Results:**
     - ALL pass → present results and ask for user approval to proceed.
     - ANY fail → analyse the failure, fix the root cause within the same task, re-run. Repeat until green.
     - After 2 fix attempts with no resolution → see Failure Mode Catalogue (surface to user, stop looping).
-4. **Report Test Status:** `Task [N] Test Gate: PASS ✅` or `Task [N] Test Gate: FAIL ❌ — fixing…`
+6. **Report Test Status:** `Task [N] Test Gate: PASS ✅` or `Task [N] Test Gate: FAIL ❌ — fixing…`
 
-> **RULE:** You are forbidden from presenting a task as complete or asking to move to the next task if any impacted test is failing.
+> **RULE:** You are forbidden from presenting a task as complete or asking to move to the next task
+> if any impacted test is failing, if the build is broken, or if new logic exists without a
+> corresponding test.
 
 ### ✅ Task Completion Gate (MANDATORY — enforced after every task)
 
 Before a task is considered **done**, ALL of the following must be true:
 
 1. All code changes for the task are implemented.
-2. All modified or newly added tests have been **executed and passed** (see Per-Task Test Gate above).
+2. The project **builds successfully**, and all modified or newly added tests — including tests
+   written for any new logic introduced in this task — have been **executed and passed**
+   (see Per-Task Test Gate above).
 3. No impacted test is in a failing state.
 
 Only after all three conditions are met:
