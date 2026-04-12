@@ -60,5 +60,5 @@ Open a [Discussion](../../discussions) rather than an issue for general question
 
 ---
 
-*By contributing, you agree that your contributions will be licensed under the [MIT License](../LICENSE).*
+*By contributing, you agree that your contributions will be licensed under the [Non-Commercial Attribution License v1.0](../LICENSE). Commercial use of contributions is prohibited without a separate written agreement.*
 

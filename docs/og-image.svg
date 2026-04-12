@@ -14,9 +14,9 @@
   <!-- Repo URL -->
   <text x="600" y="450" font-family="system-ui,sans-serif" font-size="22" text-anchor="middle" fill="#8957e5">github.com/specscout27/spec-scout</text>
 
-  <!-- MIT badge -->
-  <rect x="370" y="490" width="140" height="34" rx="6" fill="#238636"/>
-  <text x="440" y="513" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle" fill="#ffffff">MIT License</text>
+  <!-- NC Attribution badge -->
+  <rect x="370" y="490" width="140" height="34" rx="6" fill="#da3633"/>
+  <text x="440" y="513" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle" fill="#ffffff">Non-Commercial</text>
 
   <!-- Version badge -->
   <rect x="530" y="490" width="140" height="34" rx="6" fill="#1f6feb"/>

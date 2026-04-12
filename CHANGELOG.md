@@ -89,7 +89,7 @@ Versioning follows [Semantic Versioning](https://semver.org/):
 
 
 #### Governance
-- MIT License
+- Non-Commercial Attribution License v1.0 (commercial use prohibited; attribution required)
 - `CONSTITUTION.md` mandates enforced across all phases
 - Agent hard constraint: no git write commands ever
 
