@@ -105,13 +105,13 @@ git --no-pager rev-list --count [BASELINE_COMMIT]..origin/main 2>&1 | cat
 ```
 - Record this as `[COMMIT_DISTANCE]`.
 - If `[COMMIT_DISTANCE]` > 5:
-  > ⚠️ **High Drift Warning:** There are `[COMMIT_DISTANCE]` commits between the context baseline and current main HEAD. This is a significant drift. After updating context, **you are strongly required to commit and push the updated context files to main immediately** — do not defer this.
+  > ⚠️ **High Drift Warning:** There are `[COMMIT_DISTANCE]` commits between the context baseline and current origin/main HEAD. This is a significant drift. After updating context, **you are strongly required to commit and push the updated context files to main immediately** — do not defer this.
 
 ---
 
 ### Step 3: Get Commit Summary
 
-**Action:** Retrieve the commit log between `[BASELINE_COMMIT]` and `[CURRENT_MAIN_HEAD]` (main only, not current branch commits):
+**Action:** Retrieve the commit log between `[BASELINE_COMMIT]` and `[CURRENT_MAIN_HEAD]` (origin/main only, not current branch commits):
 ```bash
 git --no-pager log [BASELINE_COMMIT]..origin/main --oneline 2>&1 | cat
 ```
@@ -122,7 +122,7 @@ Display these commits to the user as part of the summary in Step 5.
 
 ### Step 4: Analyse File-Level Changes (Diff)
 
-**Action:** Get the list of files changed between the baseline and main HEAD:
+**Action:** Get the list of files changed between the baseline and origin/main HEAD:
 ```bash
 git --no-pager diff --name-status [BASELINE_COMMIT]..origin/main 2>&1 | cat
 ```
@@ -216,10 +216,10 @@ The report must render every proposed context change as a **Before → After** b
 # 📊 Context Update Analysis Report
 Generated: [Current timestamp]
 Baseline Commit: [BASELINE_COMMIT] — "[commit message]"
-Current Main HEAD: [CURRENT_MAIN_HEAD] — "[commit message]"
+Current origin/main HEAD: [CURRENT_MAIN_HEAD] — "[commit message]"
 Commits Analysed: [COMMIT_DISTANCE] commits since baseline
 
-⚠️ DISCLAIMER: This update assumes the current branch is latest with main.
+⚠️ DISCLAIMER: This update assumes the current branch is latest with origin/main.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -320,7 +320,7 @@ written directly into the file if you APPROVE.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ This is the proposed context update with main.
+✅ This is the proposed context update with origin/main.
 
 Review the BEFORE → AFTER blocks above for each change.
 Type "PROCEED" to step through each change interactively with APPROVE / EDIT / SKIP options.
@@ -408,20 +408,20 @@ After all module updates are applied:
 
 ```markdown
 ## Context Baseline
-- **Branch:** main
+- **Branch:** origin/main
 - **Baseline Commit:** [CURRENT_MAIN_HEAD]
 - **Generated On:** [current date ISO 8601]
-- **Status:** Context updated to main at above commit. Use this hash for @update-context drift detection.
+- **Status:** Context updated to origin/main at above commit. Use this hash for @update-context drift detection.
 ```
 
 5. **Review `## 🛠️ Repo Tech Specification` in `index.md`** (if Build/Dependency or Infra/Runtime files changed):
 
-   - If `pom.xml`, `build.gradle`, `package.json`, `requirements.txt`, `go.mod`, `Dockerfile`, or similar files appear in the diff:
-     - Read the changed file and compare against the current `## 🛠️ Repo Tech Specification` block in `index.md`.
-     - Present a Before → After update proposal for the affected fields in the same format as Step 6 change cards.
-     - Apply only if user APPROVEs.
-     - Update the `- **Last Tech Spec Review:** [date]` field to today.
-   - If no build/infra files changed — skip this sub-step.
+    - If `pom.xml`, `build.gradle`, `package.json`, `requirements.txt`, `go.mod`, `Dockerfile`, or similar files appear in the diff:
+        - Read the changed file and compare against the current `## 🛠️ Repo Tech Specification` block in `index.md`.
+        - Present a Before → After update proposal for the affected fields in the same format as Step 6 change cards.
+        - Apply only if user APPROVEs.
+        - Update the `- **Last Tech Spec Review:** [date]` field to today.
+    - If no build/infra files changed — skip this sub-step.
 
    > **Example fields that may change:** Language version bump, new major dependency added, change in messaging system, change in runtime/deployment target.
 
@@ -497,20 +497,20 @@ needContextReload: true
      of the next phase, then set this flag back to false.
 
 ─────────────────────────────────────────────────────
-📌 ACTION REQUIRED — Commit & Push Context to Main
+📌 ACTION REQUIRED — Commit & Push Context to origin/main
 ─────────────────────────────────────────────────────
 
-The updated context files must be committed and pushed to main so they
+The updated context files must be committed and pushed to origin/main so they
 remain the source of truth for all team members. Please run the following
 commands in your terminal (the agent will NOT do this for you):
 
   git add .github/spec-scout/context/
-  git commit -m "docs: update module context to main HEAD [CURRENT_MAIN_HEAD]"
+  git commit -m "docs: update module context to origin/main HEAD [CURRENT_MAIN_HEAD]"
   git push origin main
 
 [IF COMMIT_DISTANCE > 5]
 ⚠️ HIGH DRIFT ENFORCEMENT: The drift was [COMMIT_DISTANCE] commits.
-You must commit and push the updated context to main BEFORE continuing
+You must commit and push the updated context to origin/main BEFORE continuing
 any further development. Skipping this creates compounding drift risk
 for the entire team.
 [END IF]
@@ -546,7 +546,7 @@ Use this matrix to determine which context files to update:
 
 ### ✅ Use @update-context when:
 - You made code changes directly (not via SDD workflow)
-- Multiple commits have accumulated on main without context updates
+- Multiple commits have accumulated on origin/main without context updates
 - You're starting a new session (offered automatically as P0)
 - You pulled changes from teammates and want to sync context
 - You're doing a weekly maintenance check

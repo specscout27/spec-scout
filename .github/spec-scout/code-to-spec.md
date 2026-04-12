@@ -75,23 +75,53 @@ Record all detected tech signals. If nothing is detected, note: `"Tech stack: un
 
 ### Guard 2: Working Tree Must Be Clean
 
+> 📌 **Spec-Scout Setup Exemption:** Uncommitted changes that affect **only** Spec-Scout framework files are automatically exempted from this guard. This supports the common setup pattern where all framework files are introduced in a single initial commit. The exempted paths are:
+> - `.github/copilot-instructions.md`
+> - `.github/spec-scout/` (all files within this directory)
+>
+> If **all** uncommitted changes fall within these paths, the guard passes and a notice is displayed. If **any** uncommitted change falls outside these paths, the guard fails as normal.
+
 **Step 1 — Check for uncommitted changes:**
 ```bash
 git status --porcelain
 ```
 
-- If output is **empty** → working tree is clean. Both guards pass. Proceed to Phase 1.
-- If output is **non-empty** → **STOP immediately** and output the following structured report:
+**Step 2 — Filter out Spec-Scout framework files:**
+
+From the raw `git status --porcelain` output, exclude every line whose file path starts with:
+- `.github/copilot-instructions.md`
+- `.github/spec-scout/`
+
+Call the remaining lines the **non-framework dirty set**.
+
+**Step 3 — Evaluate:**
+
+- If the raw output is **empty** → working tree is clean. Both guards pass. Proceed to Phase 1.
+- If the raw output is **non-empty** but the **non-framework dirty set is empty** → all uncommitted changes are Spec-Scout framework files only. Display the following notice and proceed to Phase 1:
 
 ```
-❌ Cannot proceed. The working tree has uncommitted changes.
+⚠️  Notice: Uncommitted Spec-Scout framework files detected — guard exemption applied.
+
+The following uncommitted file(s) belong exclusively to the Spec-Scout framework
+and have been exempted from the clean-tree requirement:
+
+  [List each exempted file with its git status code]
+
+These files are expected to be uncommitted during initial framework setup.
+All project source files are clean. Proceeding with code-to-spec analysis.
+```
+
+- If the **non-framework dirty set is non-empty** → **STOP immediately** and output the following structured report:
+
+```
+❌ Cannot proceed. The working tree has uncommitted changes outside the Spec-Scout framework.
 
 The code-to-spec process requires a clean working tree on main so it
 reads the exact committed state of the codebase — not local edits.
 
 Files with uncommitted changes:
 ─────────────────────────────────────────────────────
-[For each line in git status --porcelain output, map the status code and show:]
+[For each line in the non-framework dirty set, map the status code and show:]
 
   [STATUS]  [FILE PATH]
 
@@ -102,6 +132,12 @@ Files with uncommitted changes:
     ??  = Untracked new file (not yet added to git)
     MM  = Modified in both staging and working tree
     AM  = Added to staging, then further modified
+─────────────────────────────────────────────────────
+
+[If any Spec-Scout framework files are also dirty, list them separately:]
+
+Spec-Scout framework files (exempted from guard, shown for awareness):
+  [STATUS]  [FILE PATH]
 ─────────────────────────────────────────────────────
 
 What to do:
