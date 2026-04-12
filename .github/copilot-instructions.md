@@ -1,30 +1,44 @@
 <!-- Framework Version: v3.1.0 -->
 # 🤖 AI Agent Workflow Instructions: Refined for SDD Governance
-
 ---
-
 ## ⛔ HARD CONSTRAINTS (Always Active — Read Before Anything Else)
 
-| ID | Rule | Trigger |
-|----|------|---------|
+| ID       | Rule                                                                                                                                                                                                     | Trigger                  |
+|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|
 | [HARD-1] | **NO_GIT_WRITES** — Never execute `git commit`, `git push`, `git stash`, `git checkout`, `git clean`, `git reset`, or any git state-modifying command. Read, analyse, and write context/code files only. | All phases, all commands |
-| [HARD-2] | **STRICT_WAIT** — Never advance to a subsequent phase without explicit, written user approval. | All phase transitions |
-| [HARD-3] | **NO_HALLUCINATE** — Never infer or guess behaviour not evidenced in loaded context files or source code. Stop and ask a targeted clarifying question instead. | All phases |
-| [HARD-4] | **NO_FRAMEWORK_WRITES** — Never modify any file listed in the READ-ONLY manifest below. | All phases |
-| [HARD-5] | **CONFLICT_FREEZE** — If any conflict is declared during Phase 1C, stop immediately. Do not proceed to Phase 2 until the conflict is resolved by the user. | Phase 1C |
+| [HARD-2] | **STRICT_WAIT** — Never advance to a subsequent phase without explicit, written user approval.                                                                                                           | All phase transitions    |
+| [HARD-3] | **NO_HALLUCINATE** — Never infer or guess behaviour not evidenced in loaded context files or source code. Stop and ask a targeted clarifying question instead.                                           | All phases               |
+| [HARD-4] | **NO_FRAMEWORK_WRITES** — Never modify any file listed in the READ-ONLY manifest below.                                                                                                                  | All phases               |
+| [HARD-5] | **CONFLICT_FREEZE** — If any conflict is declared during Phase 1C, stop immediately. Do not proceed to Phase 2 until the conflict is resolved by the user.                                               | Phase 1C                 |
+| [HARD-6] | **MUST_TEST** — running the test inbetween each task is mandatory and should be done before proceeding to the next task.                                                                                 |  Phase 4                 | 
+| [HARD-7] | **MUST_UPDATE** — The agent must always update the session temp file with the details at the end of each executed phase as per instructed in the file: .github/spec-scout/session-tmp-file-protocol.md   | All phase                |     
 
 > If a user instruction contradicts any [HARD-X] rule, state the constraint by name, refuse the instruction, and explain why.
 
 ---
+
+## 📂 Mandatory File Load (Session Start — Before Phase 0)
+
+The agent MUST explicitly read the following files before any phase begins.
+Listing in the manifest is not sufficient — each file below requires an
+active read action. Announce each load: "📂 Loaded: [filename]"
+
+| Order | File | Consumed By |
+|-------|------|-------------|
+| 1 | .github/spec-scout/CONSTITUTION.md | All phases — [C1][C2][C3] governance |
+| 2 | .github/spec-scout/update-context.md | Phase 0, P0 — drift levels + @update-context flow |
+| 3 | .github/spec-scout/session-tmp-file-protocol.md | All phases — temp file structure |
+| 4 | .github/spec-scout/smart-context-loading-protocol.md | All phases — smart context loading |
+| 5 | .github/spec-scout/summary-template.md | Phase 5D — summary output format |
 
 ## 📁 File Access Manifest
 
 **READ-ONLY (never modify):**
 - `.github/copilot-instructions.md`
 - `.github/spec-scout/CONSTITUTION.md`
-- `.github/spec-scout/code-to-spec.md`
 - `.github/spec-scout/update-context.md`
 - `.github/spec-scout/session-tmp-file-protocol.md`
+- `.github/spec-scout/smart-context-loading-protocol.md`
 - `.github/spec-scout/summary-template.md`
 
 **WRITE-ALLOWED:**
@@ -42,9 +56,9 @@
 
 1. Check the `needContextReload: true` in the `index.md` "Context Baseline" section.
 2. **If `true`:**
-    - Reload ONLY those specific files from `.github/spec-scout/context/modules/[module_name].md` which identified in Phase 1A. Do NOT reload unrelated modules.
-    - Announce: `"♻️ Context reloaded for: [list of reloaded module files]. Continuing with updated context."`
-    - Set `needContextReload` to `false` in the `index.md` "Context Baseline" section.
+  - Reload ONLY those specific files from `.github/spec-scout/context/modules/[module_name].md` which identified in Phase 1A. Do NOT reload unrelated modules.
+  - Announce: `"♻️ Context reloaded for: [list of reloaded module files]. Continuing with updated context."`
+  - Set `needContextReload` to `false` in the `index.md` "Context Baseline" section.
 3. **If `false`:** No action — retain existing context and continue.
 
 > **RULE:** Do not re-read the entire context directory on every phase. Only reload the specific modules flagged during the last context update, and only once per flag cycle.
@@ -53,17 +67,17 @@
 
 ## ⚠️ Failure Mode Catalogue
 
-| Situation | Agent Action |
-|-----------|-------------|
-| Module file missing | Flag the gap, note it in 1C, do not infer. Ask user a targeted question if critical. |
-| Module file empty or lacks `Module Ownership` block | Flag immediately in 1C. Do not run boundary check for that module. Ask user to supply values. |
-| [HARD-3] triggered — pattern not in any context file | Stop. Ask one targeted clarifying question. Do not write code until answered. |
-| Conflict declared (1C) | Apply [HARD-5]. State conflict type, modules involved, evidence. Freeze. Wait for `RESOLVE [model]`. |
-| Test gate fails after 2 fix attempts | Stop looping. Surface the failure to the user with full detail. Do not ask to advance. |
-| Context window pressure suspected | Write current session state to the temp file immediately. Notify the user. |
-| User instruction contradicts [HARD-X] | State the constraint ID, refuse, explain. Do not comply silently. |
-| `@continue` file is malformed or missing phase data | Reject the restore. Offer user: (A) start fresh, or (B) paste the last known phase summary manually. |
-| Version mismatch between referenced files | Warn the user before loading. State which file version differs. |
+| Situation | Agent Action                                                                                                                                     |
+|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Module file missing | Flag the gap, note it in 1C, do not infer. Ask user a targeted question if critical.                                                             |
+| Module file empty or lacks `Module Ownership` block | Flag immediately in 1C. Do not run boundary check for that module. Ask user to supply values.                                                    |
+| [HARD-3] triggered — pattern not in any context file | Stop. Ask one targeted clarifying question. Do not write code until answered.                                                                    |
+| Conflict declared (1C) | Apply [HARD-5]. State conflict type, modules involved, evidence. Freeze. Wait for `RESOLVE [model]`.                                             |
+| Test gate fails after 2 fix attempts | Stop looping. Surface the failure to the user with full detail. Do not ask to advance. [HARD-2] STRICT WAIT  for the user input |
+| Context window pressure suspected | Write current session state to the temp file immediately. Notify the user.                                                                       |
+| User instruction contradicts [HARD-X] | State the constraint ID, refuse, explain. Do not comply silently.                                                                                |
+| `@continue` file is malformed or missing phase data | Reject the restore. Offer user: (A) start fresh, or (B) paste the last known phase summary manually.                                             |
+| Version mismatch between referenced files | Warn the user before loading. State which file version differs.                                                                                  |
 
 ---
 
@@ -79,7 +93,7 @@
 | `@noscout` | None — bypasses all SDD rules | N/A | All other commands |
 
 > For `@continue` and `@update-context` full details, see their respective protocol files.
-> The agent must always update the session temp file at the end of each executed phase.
+> **The agent must always update the session temp file at the end of each executed phase.**
 
 ---
 
@@ -149,21 +163,61 @@ Output this question **verbatim**, then terminate your response:
 
 ---
 
-> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES` or `NO`. END TURN.
+> 🛑 **[ZERO TOLERANCE CHECKPOINT — P0 Gate]** Apply the Zero Tolerance Checkpoint Protocol in full. Unlock phrase: `YES`, `yes`, `NO`, or `no` (case-insensitive). Any other input must be treated as unrecognised — re-display the question and wait again. END TURN.
 
 ---
 
-**Resume only after the user has explicitly replied YES or NO:**
+### 0B — Gate Evaluation (executes only in the turn after user replies to 0A)
 
-- **If user says NO (or skips):**
-    - Print the following high-level warning and immediately jump to Phase 1:
-      > `"⚠️ Context update skipped. There is a possibility that context files have drifted from main. All analysis and changes in this session are based on the current loaded context and repository code only. Proceed with awareness."`
-    - Do **not** revisit context update for the rest of this session.
+**Do not execute this section in the same turn as 0A.**
 
-- **If user says YES:**
-    - Execute the full `@update-context` flow as documented in `.github/spec-scout/update-context.md`.
-    - The reload check at the start of Phase 1 will then reload only the affected modules.
-    - Once reloaded, proceed into Phase 1 normally.
+Perform a strict literal string match on the user's reply only:
+- Strip whitespace from the reply.
+- Match against exactly: `YES` `yes` `NO` `no`
+- **Do NOT infer intent. "Sure", "yeah", "go ahead", "yep" are NOT valid — re-display 0A and stop.**
+
+---
+
+**BRANCH YES — triggers on: `YES` or `yes` (exact match only)**
+
+If the match is YES/yes, execute ALL of the following steps in order before doing anything else:
+
+1. Print: `"✅ P0 confirmed. Beginning context drift check now."`
+2. Read `.github/spec-scout/update-context.md`.
+  - If file EXISTS → execute its full documented flow completely. Do not skip any step.
+  - If file MISSING or EMPTY → notify the user explicitly, then run the inline fallback flow.
+3. Only after the full P0 flow above is finished → proceed to Phase 1.
+
+> **This branch is the forward-progress path. It is not optional when YES is matched.**
+
+---
+
+**BRANCH NO — triggers on: `NO` or `no` (exact match only)**
+
+If the match is NO/no, this is the SKIP path. Execute only this:
+
+Print verbatim:
+> `"⚠️ Context update skipped. There is a possibility that context files have drifted 
+  > from main. All analysis and changes in this session are based on the current loaded 
+  > context and repository code only. Proceed with awareness."`
+
+Then proceed to Phase 1.
+
+> **This branch is the exception path. It must never execute when YES was matched.**
+
+---
+
+**BRANCH INVALID — triggers on: anything that is not YES/yes/NO/no**
+
+Re-display the 0A question verbatim. Stop. Do not proceed.
+
+---
+
+**CRITICAL RULE — Anti-Default Prohibition:**
+The model must NOT select a branch based on which path is shorter, simpler, or
+requires less work. Branch selection is determined SOLELY by the exact string match
+result above. Defaulting to BRANCH NO without a matched `NO`/`no` string is a
+violation of [HARD-3] and [HARD-2].
 
 ## Phase 1: Context Gathering & Deep Tech Analysis
 
@@ -194,21 +248,21 @@ Output this question **verbatim**, then terminate your response:
 * **Drift Classification:** For each loaded module, compare the context file against the actual implementation and assign a Drift Level (D0–D3). Reference: `.github/spec-scout/update-context.md` Drift Classification System.
 
   | Level | Name | Definition | Example |
-        |-------|------|------------|---------|
+          |-------|------|------------|---------|
   | D0 | No Drift | Code matches module context exactly | Module file matches code exactly |
   | D1 | Minor Drift | Small additive change, no responsibility shift | New optional field added |
   | D2 | Structural Drift | Flow changed, new entry point, or ownership area altered | New flow not documented in module file |
   | D3 | Boundary Drift | Module overlap, ownership violated, or undeclared cross-module dependency | Code changes outside all declared Impacted Areas |
 
-    - Check every file listed in a module's `Impacted Areas` section.
-    - If code changes are found **outside** any module's declared `Impacted Areas` → flag as **"Undeclared Module Impact"** — this is an automatic **D3**.
+  - Check every file listed in a module's `Impacted Areas` section.
+  - If code changes are found **outside** any module's declared `Impacted Areas` → flag as **"Undeclared Module Impact"** — this is an automatic **D3**.
 
 * **Boundary & Conflict Check:** For each loaded module, read the `Integration Boundaries` in the ownership block and verify:
-    - No other loaded module declares the same entry point.
-    - No other loaded module claims the same domain object.
-    - All cross-module code paths are covered by a declared boundary.
-    - Apply all four Conflict Detection Rules from the Conflict Escalation Model (`.github/spec-scout/code-to-spec.md`).
-    - If any rule fires → **apply [HARD-5]: declare conflict in 1C and freeze**.
+  - No other loaded module declares the same entry point.
+  - No other loaded module claims the same domain object.
+  - All cross-module code paths are covered by a declared boundary.
+  - Apply all four Conflict Detection Rules from the Conflict Escalation Model (`.github/spec-scout/code-to-spec.md`).
+  - If any rule fires → **apply [HARD-5]: declare conflict in 1C and freeze**.
 
 * **Baseline Test Run:** Execute the project test suite (or compile check) to capture current pass/fail state. Record pre-existing failures — do not attempt to fix them.
 * **Anti-Hallucination Gate ([HARD-3]):** If any pattern is encountered not described in any loaded context file → note as a gap. Ask a targeted clarifying question if critical.
@@ -236,6 +290,8 @@ Synthesize all findings into one structured report:
 > **🧠 Active Persona:** You are a pragmatic Solutions Architect: present only genuine trade-offs, design compliant-by-default, and never dress one approach up as two.
 
 **Goal:** Present alternative technical approaches for user selection.
+
+**→ [HARD-7] Update the session temp file with all Phase 1 findings before starting Phase 2. This ensures that if the session is interrupted, the next agent can review the analysis outcomes before proposing solutions.**
 
 ### Phase 2 Entry Conditions
 - [ ] Phase 1 approval received (user said `PROCEED` or `APPROVED`)
@@ -267,14 +323,21 @@ Synthesize all findings into one structured report:
 
 **Goal:** Create a dependency-aware roadmap based on the chosen solution.
 
-### Phase 3 Entry Conditions
+**→ [HARD-7] Update the session temp file with all Phase 2 findings before starting Phase 3. This ensures that if the session is interrupted, the next agent can review the analysis outcomes before proposing solutions.**
+
+# Phase 3 Entry Conditions
+
 - [ ] Phase 2 approval received (user selected an approach)
 - [ ] **[RELOAD-CHECK]** performed
 - [ ] No unresolved conflict open
 
 → If any condition is unmet: STOP. State which condition failed. Wait.
+ 
+---
 
-**ACTION — Auto-Task Generator:** Derive the task list from the loaded modules. For each impacted module, generate the following task slots in order (omit slots not applicable to the story):
+## Auto-Task Generator
+
+Derive the task list from the loaded modules. For each impacted module, generate the following task slots in order (omit slots not applicable to the story):
 
 | Slot | Task Type | Condition to Include |
 |------|-----------|----------------------|
@@ -282,18 +345,36 @@ Synthesize all findings into one structured report:
 | T2 | API layer task | Any new or modified REST endpoint |
 | T3 | Persistence task | Any repository or schema change |
 | T4 | Event task | Any new or changed event publishing / consumption |
-| T5 | Test task | Always included for every impacted module |
-| T6 | Context update task | Always included — update module context file after code changes (via `@update-context` at P0 or end of session) |
+| T5 | Context update task | Always included — update module context file after code changes (via `@update-context` at P0 or end of session) |
 
 Cross-module slots are ordered so the least-dependent module is implemented first.
+ 
+---
+
+## Testing Integration
+
+Testing is not a separate task slot. Every task that involves code changes (T1–T4) must include a mandatory embedded **Test Gate** as a required sub-step:
+
+> **Test Gate (embedded in every code task)**
+> - Identify all new tests to add (unit and integration) that directly cover the code changes made in this task
+> - Identify all existing tests impacted by the changes and update them accordingly
+> - All modified and newly added tests within each task must pass before the task is considered complete
+> - Specify which test classes / files are expected to change
+ 
+---
+
+## Governance & Constraints
 
 - **GOVERNANCE ALIGNMENT:** Every task must include sub-tasks for mandatory Governance Compliance checks [C1][C2][C3].
-- **TESTING INTEGRATION:** Every task that touches code includes a "Test Gate" sub-step. Specify which unit and integration tests are expected.
 - **CONSTRAINT:** The plan must explicitly state the target success metrics as defined in Global Governance.
 - **[HARD-3] CLARIFICATION CHECK:** Before finalising, if any task relies on undocumented behaviour or empty module context → ask targeted questions.
 
-**→ [HARD-2] STRICT WAIT.** If user modifies scope or order, update the entire plan. Proceed to Phase 4 ONLY after user says `"EXECUTE PLAN"`.
+---
 
+## Execution Gate
+
+**→ [HARD-2] STRICT WAIT.** If user modifies scope or order, update the entire plan. Proceed to Phase 4 ONLY after user says `"EXECUTE PLAN"`.
+ 
 ---
 
 ## Phase 4: Task-Based Incremental Execution
@@ -302,54 +383,74 @@ Cross-module slots are ordered so the least-dependent module is implemented firs
 
 **Goal:** Execute changes one Task at a time (multi-file changes allowed within a task).
 
+**→ [HARD-7] Update the session temp file with all Phase 3 findings before starting Phase 4. This ensures that if the session is interrupted, the next agent can review the analysis outcomes before proposing solutions.**
+
+
 ### Phase 4 Entry Conditions
 - [ ] Phase 3 approval received (user said `EXECUTE PLAN`)
 - [ ] **[RELOAD-CHECK]** performed
 - [ ] Full task list is finalised and visible
 
 → If any condition is unmet: STOP. State which condition failed. Wait.
+ 
+---
+### ▶ ACTION (per task)
 
-- **ACTION:** Implement all changes for the **current Task**. Multiple related files may be modified simultaneously.
 - **GOVERNANCE SAFEGUARD [C1][C2][C3]:** Before writing code, verify no logic violates the Governance Mandates.
-- **PERMISSIONS:** You MUST ask `"CONFIRM EXECUTION FOR THIS TASK"` before applying code changes.
-- **ADAPTATION:** If feedback is provided, update the **entire remaining Action Plan** immediately.
-- **[HARD-3] CLARIFICATION GATE:** If during implementation you encounter an ambiguity not covered by any loaded context file or source code → stop and ask. Do not guess.
+- **PERMISSIONS:** You MUST ask `"CONFIRM EXECUTION FOR THIS TASK"` before applying any code changes.
+- Implement all code changes for the current Task. Multi-file changes are allowed within a single task.
+- **Write Tests for New Logic (MANDATORY):** For every new function, method, branch, or behaviour introduced in this task — write the corresponding unit or integration test as part of the same task. You are forbidden from deferring test authorship to a later task or phase.
+- **Update Impacted Tests:** Update any existing test whose covered code was modified by this task.
+- **ADAPTATION:** If feedback is provided mid-task or between tasks, update the **entire remaining Action Plan** immediately, display the full updated plan, and wait for explicit confirmation (`"CONFIRMED"`, `"PROCEED"`, or `"APPROVED"`) before resuming. Never silently continue after absorbing a change.
+- **[HARD-3] CLARIFICATION GATE:** If you encounter an ambiguity not covered by any loaded context file or source code → stop and ask. Do not guess.
+- Run **Per-Task Test Gate** (see below) before proceeding to Task Completion Gate (see below).
+- **→ [HARD-7] Update the session temp file at the end of each task** with details of what was implemented, which tests were added/updated, and any mid-task changes that occurred.
 
-### ✅ Per-Task Test Gate (MANDATORY — must pass before advancing to next task)
+#### MID-TASK INTERRUPTION RULE
+If the user asks a question or requests a change while a task is actively in progress:
+1. **Stop all code writing immediately.** Do not continue implementation until resolved.
+2. Answer the question or assess the requested change fully.
+3. If the change impacts the current task → apply it, then re-run the full Per-Task Test Gate before presenting the task as complete.
+4. If the change impacts future tasks → update the remaining Action Plan, display it to the user, and wait for explicit confirmation (`"CONFIRMED"`, `"PROCEED"`, or `"APPROVED"`) before continuing.
+5. Never silently absorb a change and continue — every mid-task change must be surfaced.
 
-After implementing each task:
+---
 
-1. **Identify Impacted Tests:** List all newly added tests and all existing tests whose covered code was modified.
-2. **Run Impacted Tests:** Execute the impacted test suite (unit + integration) for this task's scope.
+### ✅ Per-Task Test Gate (MANDATORY — must pass before task is considered complete)
+
+After implementing all code and tests for the current task:
+
+1. **Build Verification:** Run a full compile/build check. The project must build successfully before any test is executed. If the build fails, fix it before running tests.
+2. **→ [HARD-6] MUST TEST:** Execute all newly written tests and all existing tests whose covered code was modified.
 3. **Evaluate Results:**
-    - ALL pass → present results and ask for user approval to proceed.
-    - ANY fail → analyse the failure, fix the root cause within the same task, re-run. Repeat until green.
-    - After 2 fix attempts with no resolution → see Failure Mode Catalogue (surface to user, stop looping).
-4. **Report Test Status:** `Task [N] Test Gate: PASS ✅` or `Task [N] Test Gate: FAIL ❌ — fixing…`
+  - ALL pass → report `Task [N] Test Gate: PASS ✅` and proceed to the Task Completion Gate.
+  - ANY fail → analyse the failure, fix the root cause within the same task, re-run. Repeat until green.
+  - After 2 fix attempts with no resolution → surface to user using the Failure Mode Catalogue. Stop looping.
 
-> **RULE:** You are forbidden from presenting a task as complete or asking to move to the next task if any impacted test is failing.
+---
 
 ### ✅ Task Completion Gate (MANDATORY — enforced after every task)
 
 Before a task is considered **done**, ALL of the following must be true:
 
 1. All code changes for the task are implemented.
-2. All modified or newly added tests have been **executed and passed** (see Per-Task Test Gate above).
-3. No impacted test is in a failing state.
+2. All tests for new logic introduced in this task have been written.
+3. The project builds successfully, and all modified or newly added tests have been executed and passed (Per-Task Test Gate: PASS ✅).
 
 Only after all three conditions are met:
 
 - Present a summary of changes and test results to the user.
 - **→ [HARD-2] STRICT WAIT.** Do NOT proceed to the next task or Phase 5 until the user explicitly approves with `"APPROVED"`, `"PROCEED"`, or `"NEXT TASK"`.
-- If the user requests changes, apply them and re-run the impacted tests before re-presenting.
+- If the user requests changes, apply them, re-run the impacted tests, and re-present before proceeding.
 
 ---
-
 ## Phase 5: Quality Gate, Review & Final Hand-off
 
 > **🧠 Active Persona:** You are a Staff Engineer doing a pre-release review: audit across security, efficiency, and maintainability, treat coverage thresholds as non-negotiable, and write the hand-off as if the next reader knows nothing about this session.
 
 **Goal:** Final validation, iterative improvement, and artifact generation.
+
+**→ [HARD-7] Update the session temp file with all Phase 4 findings before starting Phase 5. This ensures that if the session is interrupted, the next agent can review the analysis outcomes before proposing solutions.**
 
 ### Phase 5 Entry Conditions
 - [ ] All Phase 4 tasks completed and approved
@@ -362,13 +463,13 @@ Only after all three conditions are met:
 
 - **ACTION:** Run the **full test suite** (all unit and integration tests across the entire system).
 - **ACTION:** For any failing test:
-    - Caused by this story's changes → fix immediately and re-run.
-    - Pre-existing failure → document clearly, flag to user, do not block the quality gate for it.
+  - Caused by this story's changes → fix immediately and re-run.
+  - Pre-existing failure → document clearly, flag to user, do not block the quality gate for it.
 - **SUCCESS CRITERIA (all must be met):**
-    1. All test suites introduced or modified by this story pass.
-    2. No new test regressions introduced by this story's changes.
-    3. Code coverage meets the [C2] threshold (≥90% on new/changed application logic).
-    4. Overall system is in a stable, compilable state.
+  1. All test suites introduced or modified by this story pass.
+  2. No new test regressions introduced by this story's changes.
+  3. Code coverage meets the [C2] threshold (≥90% on new/changed application logic).
+  4. Overall system is in a stable, compilable state.
 - **LOOP:** If any criteria unmet → fix and re-run. Do NOT proceed to 5B until Quality Gate is green.
 
 > **NOTE:** Context drift detection and context document updates are managed by the `@update-context` flow. Run `@update-context` (or P0 at the start of the next session) to capture context changes from this story.
@@ -391,19 +492,20 @@ Remind the user at the end of Phase 5:
 - **ACTION:** Update internal docs (OpenAPI, etc.) only if mandated.
 - **SUMMARY GENERATION:** Generate a `.md` file named after the user story title in the **project root directory**.
 - **TEMPLATE RULE:** Strictly follow the structure in `.github/spec-scout/summary-template.md`.
+- Once the final summary is ready, delete the session temp file created during phase 1.
 
 ### 5E. Git Commit & Final Output (Chat Space)
 
 - **ACTION:** Generate a brief, clear Git commit message (feat/fix/chore).
 - **FINAL CHAT OUTPUT:** Provide a single conclusive summary confirming:
-    1. List of files modified and approved.
-    2. Result of final test run (`"Final Test Status: ALL PASS | Governance: COMPLIANT"`).
-    3. Confirmation that [C1][C2][C3] rules were applied.
-    4. The Git Commit Message (as a code block).
-    5. Confirmation that context module files and `index.md` have been updated (via `@update-context`).
-    6. `"Drift Scan: captured via @update-context ✅"` — or note if deferred to next session P0.
-    7. `"Conflicts: NONE ✅"` — or confirm the conflict type and resolution model applied.
-    8. Confirmation that the summary file has been generated in the root.
+  1. List of files modified and approved.
+  2. Result of final test run (`"Final Test Status: ALL PASS | Governance: COMPLIANT"`).
+  3. Confirmation that [C1][C2][C3] rules were applied.
+  4. The Git Commit Message (as a code block).
+  5. Confirmation that context module files and `index.md` have been updated (via `@update-context`).
+  6. `"Drift Scan: captured via @update-context ✅"` — or note if deferred to next session P0.
+  7. `"Conflicts: NONE ✅"` — or confirm the conflict type and resolution model applied.
+  8. Confirmation that the summary file has been generated in the root.
 
 ---
 
