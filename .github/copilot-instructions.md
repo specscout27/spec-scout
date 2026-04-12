@@ -1,4 +1,4 @@
-<!-- Framework Version: v3.1.0 -->
+<!-- Framework Version: v3.2.0 -->
 # 🤖 AI Agent Workflow Instructions: Refined for SDD Governance
 
 ---

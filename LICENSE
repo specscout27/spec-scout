@@ -1,21 +1,132 @@
-MIT License
+Spec-Scout Non-Commercial Attribution License
+Version 1.0 — April 2026
 
 Copyright (c) 2026 specscout27
+Project: https://specscout27.github.io/spec-scout/
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+TERMS AND CONDITIONS
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. DEFINITIONS
+
+   "Software" means the Spec-Scout framework and all associated files,
+   including Markdown configuration, scripts, documentation, and workflow
+   instruction files contained in this repository.
+
+   "Commercial Use" means any use intended for or directed towards commercial
+   advantage or monetary compensation. This includes, but is not limited to:
+   use in a commercial product or service, Software-as-a-Service (SaaS)
+   offering, paid consulting or contracting work, or internal tooling deployed
+   at a for-profit organisation.
+
+   "Non-Commercial Use" means use solely for personal, educational, academic
+   research, or non-profit purposes where no direct or indirect monetary
+   compensation is received by any party for the use, deployment, or output of
+   the Software.
+
+   "Modified Version" means any derivative work that incorporates, adapts, or
+   is based upon the Software, in whole or in part, regardless of the extent
+   of modification.
+
+   "Distribute" means to make the Software or a Modified Version available to
+   any third party by any means, including but not limited to publishing,
+   sharing, uploading, or embedding.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. GRANT OF LICENSE (NON-COMMERCIAL ONLY)
+
+   Subject to the terms and conditions of this License, the copyright holder
+   grants you a worldwide, royalty-free, non-exclusive, non-sublicensable
+   license to use, copy, modify, and Distribute the Software solely for
+   Non-Commercial Use.
+
+   This license does NOT grant any rights for Commercial Use.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. ATTRIBUTION REQUIREMENTS (MANDATORY FOR ALL USE)
+
+   Any use, deployment, distribution, or publication of the Software or any
+   Modified Version — whether in original or modified form — MUST include ALL
+   of the following:
+
+   a) A clear and prominent attribution to the original project in any
+      documentation, README, about page, or user-visible credits:
+
+        "Based on Spec-Scout by specscout27
+         https://specscout27.github.io/spec-scout/"
+
+   b) Retention of this LICENSE file and all original copyright notices in
+      all copies or substantial portions of the Software.
+
+   c) If you Distribute a Modified Version, you must include a prominent
+      notice stating:
+        i.  That the work is a modified version of Spec-Scout.
+        ii. A description of the material changes made.
+        iii. The original attribution as stated in clause 3(a) above.
+
+   Failure to meet any attribution requirement in this section immediately
+   terminates your rights under this License.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+4. COMMERCIAL USE RESTRICTION
+
+   Commercial Use of the Software or any Modified Version is STRICTLY
+   PROHIBITED without a separate, explicit, written commercial license
+   agreement signed by the copyright holder.
+
+   Using the Software within a for-profit organisation — even internally and
+   without direct monetisation of the Software itself — constitutes Commercial
+   Use and requires a commercial license.
+
+   To inquire about obtaining a commercial license, open an issue or
+   discussion at:
+     https://github.com/specscout27/spec-scout
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+5. NO SUBLICENSING
+
+   You may not sublicense the Software or any Modified Version. Any rights
+   you exercise under this License are personal to you and may not be
+   transferred or assigned to a third party except through Distribution as
+   permitted by Section 2 and subject to Section 3.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+6. TERMINATION
+
+   Your rights under this License terminate automatically if you:
+   a) Engage in Commercial Use without a separate commercial license;
+   b) Fail to comply with the Attribution Requirements in Section 3;
+   c) Attempt to sublicense the Software in violation of Section 5.
+
+   Upon termination you must cease all use and distribution of the Software
+   and destroy all copies in your possession.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+7. DISCLAIMER OF WARRANTIES
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SUMMARY (informational — not a substitute for the terms above)
+
+  ✅  Non-commercial personal / educational / research use — PERMITTED
+  ✅  Modification for non-commercial purposes — PERMITTED
+  ✅  Distribution of original or modified versions (non-commercial) — PERMITTED
+  ⚠️  All use requires clear credit to Spec-Scout by specscout27
+  ⚠️  Modified versions must state what was changed and credit the original
+  ❌  Commercial use of any kind — PROHIBITED without written agreement
+  ❌  Sublicensing — PROHIBITED

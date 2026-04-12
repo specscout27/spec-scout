@@ -13,6 +13,14 @@ Versioning follows [Semantic Versioning](https://semver.org/):
 
 ---
 
+## [v3.2.0] — 2026-04-12
+
+### Improvements — Version Bump
+
+- **Version bumped to v3.2.0** across all framework files: `copilot-instructions.md`, `install.sh`, `README.md`, `CHANGELOG.md`, `docs/index.html`, and `docs/og-image.svg`.
+
+---
+
 ## [v3.1.0] — 2026-03-07
 
 ### Improvements — Prompt Reliability & Model Clarity
@@ -89,7 +97,7 @@ Versioning follows [Semantic Versioning](https://semver.org/):
 
 
 #### Governance
-- MIT License
+- Non-Commercial Attribution License v1.0 (commercial use prohibited; attribution required)
 - `CONSTITUTION.md` mandates enforced across all phases
 - Agent hard constraint: no git write commands ever
 
