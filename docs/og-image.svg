@@ -20,7 +20,7 @@
 
   <!-- Version badge -->
   <rect x="530" y="490" width="140" height="34" rx="6" fill="#1f6feb"/>
-  <text x="600" y="513" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle" fill="#ffffff">v3.1.0</text>
+  <text x="600" y="513" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle" fill="#ffffff">v3.2.0</text>
 
   <!-- Free badge -->
   <rect x="690" y="490" width="160" height="34" rx="6" fill="#8957e5"/>

@@ -6,7 +6,7 @@
 > 🌐 **[specscout27.github.io/spec-scout](https://specscout27.github.io/spec-scout/)** — Project website &amp; overview
 
 [![License: NC-Attribution](https://img.shields.io/badge/License-NC%20Attribution%201.0-red.svg)](LICENSE)
-[![Framework Version](https://img.shields.io/badge/Framework-v3.1.0-blue)](CHANGELOG.md)
+[![Framework Version](https://img.shields.io/badge/Framework-v3.2.0-blue)](CHANGELOG.md)
 [![Works With](https://img.shields.io/badge/Works%20With-GitHub%20Copilot%20Chat-8957e5)](https://github.com/features/copilot)
 [![Website](https://img.shields.io/badge/Website-specscout27.github.io%2Fspec--scout-8957e5)](https://specscout27.github.io/spec-scout/)
 
@@ -158,7 +158,7 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md). All contributions are welcome �
 
 ## License
 
-[Non-Commercial Attribution License v1.0](LICENSE) · Framework Version v3.1.0 · © 2026 specscout27
+[Non-Commercial Attribution License v1.0](LICENSE) · Framework Version v3.2.0 · © 2026 specscout27
 
 > **Non-commercial use only.** Attribution to the original source is required for all use, including modified versions. Commercial use requires a written agreement — open an issue to enquire.
 

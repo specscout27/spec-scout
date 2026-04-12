@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Spec-Scout Installer — Framework Version v3.1.0
+# Spec-Scout Installer — Framework Version v3.2.0
 # https://github.com/specscout27/spec-scout
 #
 # Copies the Spec-Scout SDD framework files into your repository so you can
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 SPEC_SCOUT_REPO="https://github.com/specscout27/spec-scout.git"
-FRAMEWORK_VERSION="v3.1.0"
+FRAMEWORK_VERSION="v3.2.0"
 CLEANUP_TMP=false
 TMP_CLONE_DIR=""
 
@@ -167,7 +167,7 @@ mkdir -p "$TARGET_SDD/context/modules"
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "✅  Spec-Scout v3.1.0 installed successfully!"
+echo "✅  Spec-Scout v3.2.0 installed successfully!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📋  Setup Checklist"
